@@ -492,11 +492,14 @@ Reply rules:
 PORT = 3456
 Handler = ProxyHandler
 
+def start():
+    print(f"🚀 Mumble server running at http://localhost:{PORT}/")
+    print(f"✓ Supabase configured (key kept server-side)")
+    print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "⚠️  No OPENAI_API_KEY found in .env.local")
+    print(f"✓ Email OTP via Resend ({RESEND_KEY[:8]}...)" if RESEND_KEY else "⚠️  No RESEND_KEY — OTP codes will print to terminal")
+    socketserver.TCPServer.allow_reuse_address = True
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        httpd.serve_forever()
 
-print(f"🚀 Mumble server running at http://localhost:{PORT}/")
-print(f"✓ Supabase configured (key kept server-side)")
-print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "⚠️  No OPENAI_API_KEY found in .env.local")
-print(f"✓ Email OTP via Resend ({RESEND_KEY[:8]}...)" if RESEND_KEY else "⚠️  No RESEND_KEY — OTP codes will print to terminal (add RESEND_KEY to .env.local for real emails)")
-
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    httpd.serve_forever()
+if __name__ == '__main__':
+    start()
