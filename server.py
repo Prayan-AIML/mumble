@@ -6,7 +6,6 @@ import json
 import urllib.request
 import urllib.parse
 import ssl
-import speech_recognition as sr
 from dotenv import load_dotenv
 
 # Fix SSL certificate verification on macOS
