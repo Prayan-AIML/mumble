@@ -26,16 +26,20 @@ body.cb{
 html,body{height:100%;overflow:hidden;background:#e5e5e5}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);display:flex;justify-content:center}
 
-/* ── APP SHELL (fixes desktop positioning) ── */
+/* ── APP SHELL ── */
 #app{
-  position:relative;width:100%;max-width:480px;height:100vh;
+  position:relative;width:100%;max-width:100%;height:100vh;
   overflow:hidden;background:var(--bg);
-  box-shadow:0 0 40px rgba(0,0,0,.18);
 }
 
 /* ── ONBOARDING ── */
-#onboard{position:absolute;inset:0;background:var(--pp);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;z-index:500}
-.ob-step{width:100%;max-width:360px;display:none;flex-direction:column;align-items:center;gap:22px;text-align:center}
+#onboard{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:row;align-items:stretch;z-index:500}
+.ob-brand{width:360px;flex-shrink:0;background:var(--p);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 40px;gap:22px}
+.ob-brand-egg{font-size:96px;animation:wobble 1.8s ease-in-out infinite;display:inline-block}
+.ob-brand-title{font-size:52px;font-weight:800;color:white;letter-spacing:-2px}
+.ob-brand-sub{font-size:15px;color:rgba(255,255,255,.8);line-height:1.6;text-align:center}
+.ob-steps-area{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 48px;overflow-y:auto;background:var(--pp)}
+.ob-step{width:100%;max-width:420px;display:none;flex-direction:column;align-items:center;gap:20px;text-align:center}
 .ob-step.show{display:flex}
 .ob-egg{font-size:78px;animation:wobble 1.8s ease-in-out infinite;display:inline-block}
 @keyframes wobble{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
@@ -59,17 +63,18 @@ input[type=text]:focus,input[type=tel]:focus{border-color:var(--p)}
 .btn-back{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:4px}
 
 /* ── MAIN SHELL ── */
-#main{display:none;flex-direction:column;height:100%;overflow:hidden}
+#main{display:none;flex-direction:row;height:100%;overflow:hidden}
+#mainContent{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 
 /* ── TOP STATS BAR ── */
-#statsBar{height:var(--top-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0}
+#statsBar{height:var(--top-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
 .stat-chip{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:18px;font-weight:800;font-size:14px}
 .stat-chip.streak{background:var(--orangel);color:var(--orange)}
 .stat-chip.xp{background:var(--pl);color:var(--p)}
 .logo{font-size:21px;font-weight:800;color:var(--p);letter-spacing:-1px}
 
 /* ── SCREENS ── */
-.screen{flex:1;overflow-y:auto;padding:18px 16px calc(var(--nav-h) + 16px);display:none;flex-direction:column;gap:14px}
+.screen{flex:1;overflow-y:auto;padding:22px 28px 28px;display:none;flex-direction:column;gap:14px}
 .screen.active{display:flex}
 
 /* ── HOME ── */
@@ -186,10 +191,11 @@ input[type=text]:focus,input[type=tel]:focus{border-color:var(--p)}
 .btn-report{padding:12px;background:var(--pp);color:var(--p);border:2px solid var(--pl);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
 .btn-pview{padding:11px;background:var(--pl);color:var(--p);border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
 
-/* ── BOTTOM NAV ── */
-#bottomNav{position:absolute;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 4px;z-index:100}
-.nav-btn{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .18s;font-size:9px;font-weight:700;letter-spacing:.2px}
-.nav-btn.active{color:var(--p)}
+/* ── SIDE NAV ── */
+#bottomNav{width:220px;flex-shrink:0;height:100%;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:stretch;padding:0 10px 24px;gap:2px;position:static;z-index:100}
+.nav-logo-area{padding:18px 12px 16px;font-size:23px;font-weight:800;color:var(--p);letter-spacing:-1px;border-bottom:1px solid var(--border);margin-bottom:10px;flex-shrink:0}
+.nav-btn{width:100%;height:46px;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;background:none;border:none;cursor:pointer;color:var(--muted);transition:all .18s;font-size:14px;font-weight:700;letter-spacing:-.2px;border-radius:14px;padding:0 14px;flex-shrink:0}
+.nav-btn.active{color:var(--p);background:var(--pl)}
 
 /* ── PRACTICE MODAL ── */
 #practiceModal{position:absolute;inset:0;background:var(--card);transform:translateY(100%);transition:transform .38s cubic-bezier(.32,1,.4,1);z-index:300;display:flex;flex-direction:column}
@@ -314,90 +320,179 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
 
 <!-- ONBOARDING -->
 <div id="onboard">
-  <!-- Step 0: Role -->
-  <div class="ob-step show" id="ob0">
-    <span class="ob-egg">🥚</span>
-    <div><h1 class="ob-h1">Mumble</h1><p class="ob-sub">A tiny creature waiting to find its voice.</p></div>
-    <div class="ob-card" style="gap:12px">
-      <button class="btn-main" onclick="goChildFlow()" style="background:var(--p)">I'm a child — Let's practise! 🎤</button>
-      <button class="btn-main" onclick="goParentFlow()" style="background:var(--orange)">I'm a parent — Let me help 👨‍👩‍👧</button>
-    </div>
+  <!-- Left brand panel -->
+  <div class="ob-brand">
+    <span class="ob-brand-egg">🥚</span>
+    <div class="ob-brand-title">Mumble</div>
+    <div class="ob-brand-sub">A tiny creature waiting to find its voice. Practice daily to help it grow!</div>
   </div>
-  <!-- Step 1: Email (Child) -->
-  <div class="ob-step" id="ob1">
-    <span class="ob-egg">🥚</span>
-    <div><h1 class="ob-h1">Mumble</h1><p class="ob-sub">A tiny creature waiting to find its voice.</p></div>
-    <div class="ob-card">
-      <div class="ob-label">Your email address</div>
-      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" style="width:100%;box-sizing:border-box">
-      <div id="emailError" style="display:none;font-size:12px;color:var(--red);font-weight:600;margin-top:4px"></div>
-      <button class="btn-main" onclick="goOb2()">Send code →</button>
-    </div>
-  </div>
-  <!-- Step 2: OTP -->
-  <div class="ob-step" id="ob2">
-    <div><h1 class="ob-h1" style="font-size:26px">Enter your code</h1><p class="ob-sub" id="otpSubText">Sending a 6-digit code to your phone…</p></div>
-    <div class="ob-card">
-      <div id="otpDevHint" style="display:none;font-size:13px;color:var(--orange);background:var(--orangel,#fff7ed);padding:10px 14px;border-radius:10px;font-weight:600;margin-bottom:10px">No email key — check the server terminal for your code</div>
-      <div class="otp-row">
-        <input class="otp-box" maxlength="1" id="otp0" oninput="otpNext(this,1)">
-        <input class="otp-box" maxlength="1" id="otp1" oninput="otpNext(this,2)">
-        <input class="otp-box" maxlength="1" id="otp2" oninput="otpNext(this,3)">
-        <input class="otp-box" maxlength="1" id="otp3" oninput="otpNext(this,4)">
-        <input class="otp-box" maxlength="1" id="otp4" oninput="otpNext(this,5)">
-        <input class="otp-box" maxlength="1" id="otp5" oninput="checkOTP()">
+  <!-- Right form area -->
+  <div class="ob-steps-area">
+    <!-- Step 0: Welcome -->
+    <div class="ob-step show" id="ob0">
+      <div style="width:100%">
+        <h2 style="font-size:28px;font-weight:800;color:var(--text);margin-bottom:6px">Welcome!</h2>
+        <p style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:20px">Choose your role to get started.</p>
+        <!-- Role toggle -->
+        <div style="background:var(--border);border-radius:18px;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:20px">
+          <button id="roleChildBtn" onclick="setOBRole('child')" style="padding:13px;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;background:var(--p);color:white;transition:all .18s">Student</button>
+          <button id="roleParentBtn" onclick="setOBRole('parent')" style="padding:13px;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s">Parent</button>
+        </div>
+        <!-- Action buttons -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn-main" onclick="startOBFlow('signin')">Sign In →</button>
+          <button onclick="startOBFlow('signup')" style="width:100%;padding:15px;background:white;color:var(--p);border:2.5px solid var(--p);border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;transition:all .18s">Create account</button>
+        </div>
       </div>
-      <div id="otpError" style="display:none;font-size:13px;color:var(--red);text-align:center;font-weight:600"></div>
-      <button class="btn-main" id="otpVerifyBtn" onclick="verifyOTP()">Verify →</button>
-      <button style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px" onclick="goOb2(true)">Resend code</button>
-      <button class="btn-back" onclick="goBack(1)">← Back</button>
     </div>
-  </div>
-  <!-- Step 3: Name -->
-  <div class="ob-step" id="ob3">
-    <div><h1 class="ob-h1" style="font-size:26px">What's your name?</h1><p class="ob-sub">Mumble wants to know!</p></div>
-    <div class="ob-card">
-      <input type="text" id="childName" placeholder="Enter your name" autocomplete="off" maxlength="20">
-      <button class="btn-main" onclick="goOb4()">Continue →</button>
-      <button class="btn-back" onclick="goBack(2)">← Back</button>
+    <!-- Step 1: Email (Child) -->
+    <div class="ob-step" id="ob1">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px" id="ob1Title">Student sign in</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px">We'll send a one-time code to your email.</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <div class="ob-label">Email address</div>
+        <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" style="width:100%;box-sizing:border-box">
+        <div id="emailError" style="display:none;font-size:12px;color:var(--red);font-weight:600;margin-top:4px"></div>
+        <button class="btn-main" onclick="goOb2()">Send code →</button>
+        <button class="btn-back" onclick="goBack(0)">← Back</button>
+      </div>
     </div>
-  </div>
-  <!-- Step 4: Sound -->
-  <div class="ob-step" id="ob4">
-    <div><h1 class="ob-h1" style="font-size:26px">Pick a sound to start</h1><p class="ob-sub">You can change this anytime.</p></div>
-    <div class="sound-grid">
-      <div class="sound-card picked" onclick="pickSound('R',this)"><div class="sc-sound">R</div><div class="sc-hint">Rabbit, rainbow</div></div>
-      <div class="sound-card" onclick="pickSound('S',this)"><div class="sc-sound">S</div><div class="sc-hint">Snake, sun</div></div>
-      <div class="sound-card" onclick="pickSound('TH',this)"><div class="sc-sound">TH</div><div class="sc-hint">Three, thank</div></div>
-      <div class="sound-card" onclick="pickSound('L',this)"><div class="sc-sound">L</div><div class="sc-hint">Lion, lollipop</div></div>
+    <!-- Step 2: OTP -->
+    <div class="ob-step" id="ob2">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">Enter your code</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:4px" id="otpSubText">Sending code…</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <div id="otpDevHint" style="display:none;font-size:13px;color:var(--orange);background:var(--orangel,#fff7ed);padding:10px 14px;border-radius:10px;font-weight:600">No email key — check the server terminal for your code</div>
+        <div class="otp-row">
+          <input class="otp-box" maxlength="1" id="otp0" oninput="otpNext(this,1)">
+          <input class="otp-box" maxlength="1" id="otp1" oninput="otpNext(this,2)">
+          <input class="otp-box" maxlength="1" id="otp2" oninput="otpNext(this,3)">
+          <input class="otp-box" maxlength="1" id="otp3" oninput="otpNext(this,4)">
+          <input class="otp-box" maxlength="1" id="otp4" oninput="otpNext(this,5)">
+          <input class="otp-box" maxlength="1" id="otp5" oninput="checkOTP()">
+        </div>
+        <div id="otpError" style="display:none;font-size:13px;color:var(--red);text-align:center;font-weight:600"></div>
+        <button class="btn-main" id="otpVerifyBtn" onclick="verifyOTP()">Verify →</button>
+        <button style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px" onclick="goOb2(true)">Resend code</button>
+        <button class="btn-back" onclick="goBack(1)">← Back</button>
+      </div>
     </div>
-    <button class="btn-main" onclick="startApp()">Meet Mumble →</button>
-    <button class="btn-back" onclick="goBack(3)">← Back</button>
-  </div>
-  <!-- Step 5: Parent Email -->
-  <div class="ob-step" id="ob5">
-    <span class="ob-egg">👨‍👩‍👧</span>
-    <div><h1 class="ob-h1">Parent Account</h1><p class="ob-sub">Track your child's progress.</p></div>
-    <div class="ob-card">
-      <div class="ob-label">Your email</div>
-      <input type="email" id="parentEmail" placeholder="parent@example.com" autocomplete="off">
-      <button class="btn-main" onclick="goOb6()">Continue →</button>
-      <button class="btn-back" onclick="goBack(0)">← Back</button>
+    <!-- Step 3: Name (new accounts only) -->
+    <div class="ob-step" id="ob3">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">What's your name?</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:4px">Mumble wants to know!</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <input type="text" id="childName" placeholder="Enter your name" autocomplete="off" maxlength="20">
+        <button class="btn-main" onclick="goOb4()">Continue →</button>
+        <button class="btn-back" onclick="goBack(2)">← Back</button>
+      </div>
     </div>
-  </div>
-  <!-- Step 6: Parent Name -->
-  <div class="ob-step" id="ob6">
-    <div><h1 class="ob-h1" style="font-size:26px">What's your name?</h1><p class="ob-sub">So we can personalise your dashboard.</p></div>
-    <div class="ob-card">
-      <input type="text" id="parentName" placeholder="Enter your name" autocomplete="off" maxlength="20">
-      <button class="btn-main" onclick="startParentApp()">Go to Dashboard →</button>
-      <button class="btn-back" onclick="goBack(5)">← Back</button>
+    <!-- Step 4: Sound -->
+    <div class="ob-step" id="ob4">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">Pick a sound to practise</h2>
+        <p style="font-size:14px;color:var(--muted)">You can change this anytime.</p>
+      </div>
+      <div class="sound-grid" style="width:100%">
+        <div class="sound-card picked" onclick="pickSound('R',this)"><div class="sc-sound">R</div><div class="sc-hint">Rabbit, rainbow</div></div>
+        <div class="sound-card" onclick="pickSound('S',this)"><div class="sc-sound">S</div><div class="sc-hint">Snake, sun</div></div>
+        <div class="sound-card" onclick="pickSound('TH',this)"><div class="sc-sound">TH</div><div class="sc-hint">Three, thank</div></div>
+        <div class="sound-card" onclick="pickSound('L',this)"><div class="sc-sound">L</div><div class="sc-hint">Lion, lollipop</div></div>
+      </div>
+      <button class="btn-main" style="width:100%" onclick="startApp()">Meet Mumble →</button>
+      <button class="btn-back" onclick="goBack(3)">← Back</button>
     </div>
-  </div>
+    <!-- Step 5: Parent Email -->
+    <div class="ob-step" id="ob5">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px" id="ob5Title">Parent sign in</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px">We'll send a one-time code to your email.</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <div class="ob-label">Your email</div>
+        <input type="email" id="parentEmail" placeholder="parent@example.com" autocomplete="off">
+        <button class="btn-main" onclick="goOb6()">Continue →</button>
+        <button class="btn-back" onclick="goBack(0)">← Back</button>
+      </div>
+    </div>
+    <!-- Step 6: Parent Name -->
+    <div class="ob-step" id="ob6">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">What's your name?</h2>
+        <p style="font-size:14px;color:var(--muted)">So we can personalise your dashboard.</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <input type="text" id="parentName" placeholder="Enter your name" autocomplete="off" maxlength="20">
+        <button class="btn-main" onclick="startParentApp()">Go to Dashboard →</button>
+        <button class="btn-back" onclick="goBack(5)">← Back</button>
+      </div>
+    </div>
+    <!-- Step 7: Sign In (email + password) -->
+    <div class="ob-step" id="ob7">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px" id="ob7Title">Sign In</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Welcome back!</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <div class="ob-label">Email address</div>
+        <input type="email" id="signinEmail" placeholder="you@example.com" autocomplete="email">
+        <div class="ob-label" style="margin-top:2px">Password</div>
+        <input type="password" id="signinPassword" placeholder="Your password" autocomplete="current-password">
+        <div id="signinError" style="display:none;font-size:12px;color:var(--red);font-weight:600;margin-top:2px"></div>
+        <button class="btn-main" id="signinBtn" onclick="doSignIn()">Sign In →</button>
+        <button class="btn-back" onclick="goBack(0)">← Back</button>
+      </div>
+    </div>
+    <!-- Step 8: Create password (sign-up, after OTP) -->
+    <div class="ob-step" id="ob8">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">Create a password</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Next time you sign in, you just need your email and this password — no code needed!</p>
+      </div>
+      <div class="ob-card" style="width:100%">
+        <div class="ob-label">Choose a password</div>
+        <input type="password" id="newPassword" placeholder="At least 4 characters" autocomplete="new-password">
+        <div id="newpassError" style="display:none;font-size:12px;color:var(--red);font-weight:600;margin-top:2px"></div>
+        <button class="btn-main" onclick="setNewPassword()">Continue →</button>
+      </div>
+    </div>
+  </div><!-- /ob-steps-area -->
 </div>
 
 <!-- MAIN APP -->
 <div id="main">
+  <!-- Side nav -->
+  <div id="bottomNav">
+    <div class="nav-logo-area">mumble</div>
+    <button class="nav-btn active" id="navHome" onclick="switchTab('Home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" id="navProgress" onclick="switchTab('Progress')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </button>
+    <button class="nav-btn" id="navQuests" onclick="switchTab('Quests')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Quests
+    </button>
+    <button class="nav-btn" id="navLeague" onclick="switchTab('League')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+      League
+    </button>
+    <button class="nav-btn" id="navProfile" onclick="switchTab('Profile')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      You
+    </button>
+  </div>
+  <!-- Main content -->
+  <div id="mainContent">
   <div id="statsBar">
     <div class="stat-chip streak">🔥 <span id="statStreak">0</span></div>
     <div class="logo">mumble</div>
@@ -606,29 +701,7 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
     <button onclick="logoutChild()" style="background:var(--red);color:white;border:none;border-radius:14px;padding:14px;width:100%;font-weight:700;cursor:pointer;font-size:15px">Sign out</button>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <div id="bottomNav">
-    <button class="nav-btn active" id="navHome" onclick="switchTab('Home')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Home
-    </button>
-    <button class="nav-btn" id="navProgress" onclick="switchTab('Progress')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Progress
-    </button>
-    <button class="nav-btn" id="navQuests" onclick="switchTab('Quests')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      Quests
-    </button>
-    <button class="nav-btn" id="navLeague" onclick="switchTab('League')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
-      League
-    </button>
-    <button class="nav-btn" id="navProfile" onclick="switchTab('Profile')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      You
-    </button>
-  </div>
+  </div><!-- /mainContent -->
 </div>
 
 <!-- PARENT DASHBOARD -->
@@ -708,10 +781,6 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3" fill="white" stroke="none"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>
     <div class="mic-hint" id="micHint">Tap to speak</div>
-    <div class="type-row">
-      <input id="typeInput" placeholder="Or type here..." onkeydown="if(event.key==='Enter')sendTyped()">
-      <button onclick="sendTyped()">Send</button>
-    </div>
   </div>
 </div>
 
@@ -923,16 +992,61 @@ const DB={
 };
 
 // ─── ONBOARDING ──────────────────────────────────────────────────
-function showOb(n){
-  [1,2,3,4].forEach(i=>document.getElementById('ob'+i).classList.remove('show'));
-  document.getElementById('ob'+n).classList.add('show');
-}
-function goBack(to){showOb(to);}
-// ─── ONBOARDING FLOW ─────────────────────────────────────────────
+let OB_ROLE='child', OB_MODE='signup';
 function showOb(step){document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('show'));document.getElementById('ob'+step).classList.add('show');}
 function goBack(step){showOb(step);}
-function goChildFlow(){showOb(1);}
+function setOBRole(r){
+  OB_ROLE=r;
+  const cb=document.getElementById('roleChildBtn');
+  const pb=document.getElementById('roleParentBtn');
+  cb.style.background=r==='child'?'var(--p)':'transparent';
+  cb.style.color=r==='child'?'white':'var(--muted)';
+  pb.style.background=r==='parent'?'var(--orange)':'transparent';
+  pb.style.color=r==='parent'?'white':'var(--muted)';
+}
+function startOBFlow(mode){
+  OB_MODE=mode;
+  if(OB_ROLE==='parent'){
+    showOb(5);
+    setTimeout(()=>document.getElementById('parentEmail').focus(),200);
+  } else if(mode==='signin'){
+    showOb(7);
+    setTimeout(()=>document.getElementById('signinEmail').focus(),200);
+  } else {
+    document.getElementById('ob1Title').textContent='Create student account';
+    showOb(1);
+    setTimeout(()=>document.getElementById('emailInput').focus(),200);
+  }
+}
+function goChildFlow(){startOBFlow('signup');}
 function goParentFlow(){showOb(5);}
+async function doSignIn(){
+  const email=document.getElementById('signinEmail').value.trim().toLowerCase();
+  const pwd=document.getElementById('signinPassword').value.trim();
+  const errEl=document.getElementById('signinError');
+  errEl.style.display='none';
+  if(!email||!pwd){errEl.textContent='Please fill in both fields.';errEl.style.display='block';return;}
+  const btn=document.getElementById('signinBtn');
+  btn.textContent='Checking…';btn.disabled=true;
+  const res=await DB.call('child/signin',{email,password:pwd});
+  btn.disabled=false;btn.textContent='Sign In →';
+  if(res.child){
+    S.phone=email;S.name=res.child.name;S.sound=res.child.sound||'R';
+    localStorage.setItem('mumble_session',JSON.stringify({phone:email,name:S.name,sound:S.sound}));
+    await startApp();
+  } else {
+    errEl.textContent=res.error||'Sign in failed.';errEl.style.display='block';
+  }
+}
+let _pendingPassword='';
+async function setNewPassword(){
+  const pwd=document.getElementById('newPassword').value.trim();
+  const errEl=document.getElementById('newpassError');
+  errEl.style.display='none';
+  if(!pwd||pwd.length<4){errEl.textContent='Choose a password with at least 4 characters.';errEl.style.display='block';return;}
+  _pendingPassword=pwd; // applied to DB in startApp() after child row is created
+  showOb(3);setTimeout(()=>document.getElementById('childName').focus(),200);
+}
 async function goOb2(resend=false){
   const em=document.getElementById('emailInput').value.trim().toLowerCase();
   const errEl=document.getElementById('emailError');
@@ -941,19 +1055,26 @@ async function goOb2(resend=false){
     document.getElementById('emailInput').focus();return;
   }
   errEl.style.display='none';
+  // Check if email already has an account before sending OTP
+  const check=await DB.call('child/lookup',{email:em});
+  if(check.child&&check.child.password){
+    errEl.textContent='An account already exists for this email. Please sign in instead.';
+    errEl.style.display='block';
+    document.getElementById('emailInput').focus();return;
+  }
   S.phone=em;
   ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('otpError').style.display='none';
-  document.getElementById('otpSubText').textContent='Sending a 6-digit code to '+em+'…';
+  document.getElementById('otpSubText').textContent='Sending a code to '+em+'…';
   showOb(2);
-  setTimeout(()=>document.getElementById('otp0').focus(),200);
   const res=await DB.call('otp/send',{email:em});
   if(res.error){
     document.getElementById('otpSubText').textContent='❌ '+res.error;
-  } else if(res.dev){
-    const hint=res.resend_error?'Resend error: '+res.resend_error+' — check terminal for code':'Check the server terminal for your code';
-    document.getElementById('otpSubText').textContent=hint;
-    document.getElementById('otpDevHint').style.display='block';
+  } else if(res.dev&&res.code){
+    // Email service unavailable — auto-fill and verify silently
+    res.code.split('').forEach((d,i)=>{const el=document.getElementById('otp'+i);if(el)el.value=d;});
+    document.getElementById('otpSubText').textContent='Verifying…';
+    await verifyOTP();
   } else {
     document.getElementById('otpSubText').textContent='Code sent! Check your inbox at '+em;
   }
@@ -973,15 +1094,15 @@ async function verifyOTP(){
   btn.disabled=false;
   if(res.ok){
     btn.textContent='Verified ✓';
-    // Check if returning user
     const lookup=await DB.call('child/lookup',{email:S.phone});
-    if(lookup.child&&lookup.child.name){
-      // Existing account — go straight to app
-      S.name=lookup.child.name;S.sound=lookup.child.sound||'R';
-      await startApp();
+    if(lookup.child&&lookup.child.password){
+      // Account already has a password — tell them to sign in
+      btn.textContent='Verify →';
+      const err=document.getElementById('otpError');
+      err.textContent='Account already exists. Use Sign In instead.';err.style.display='block';
     } else {
-      // New account — ask for name & sound
-      showOb(3);setTimeout(()=>document.getElementById('childName').focus(),200);
+      // New account (or old one without password) — set a password first
+      showOb(8);setTimeout(()=>document.getElementById('newPassword').focus(),200);
     }
   } else {
     btn.textContent='Verify →';
@@ -1128,6 +1249,10 @@ function logoutChild(){
 }
 async function startApp(){
   const result=await DB.getOrCreateChild(S.phone,S.name,S.sound);
+  if(_pendingPassword){
+    await DB.call('child/set-password',{email:S.phone,password:_pendingPassword});
+    _pendingPassword='';
+  }
   if(result.child){
     S.id=result.child.id;
     S.xp=result.child.xp||0;
@@ -1392,20 +1517,75 @@ function renderPMDots(){
   }
 }
 
-// ─── MIC ─────────────────────────────────────────────────────────
-function toggleListen(){if(S.busy)return;S.listening?stopListen():startListen();}
-function startListen(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){setPMBubble("Mic not available — type below!");return;}
-  rec=new SR();rec.lang='en-IN';rec.interimResults=false;rec.continuous=false;
-  rec.onstart=()=>{S.listening=true;document.getElementById('micBtn').classList.add('on');document.getElementById('micHint').textContent='Listening...';setCreatureMood('pmCreature','listening');setPMBubble('...');};
-  rec.onresult=e=>{stopListen();handleInput(e.results[0][0].transcript);};
-  rec.onerror=e=>{stopListen();if(e.error!=='no-speech')setPMBubble("Didn't catch that — try again!");};
-  rec.onend=()=>{if(S.listening)stopListen();};
-  rec.start();
+// ─── MIC — MediaRecorder → Whisper ───────────────────────────────
+let _mediaRec=null,_audioChunks=[],_audioStream=null;
+
+function toggleListen(){
+  if(S.busy)return;
+  if(S.listening){
+    if(_mediaRec&&_mediaRec.state!=='inactive')_mediaRec.stop();
+    else stopListen();
+    return;
+  }
+  startListen();
 }
+
+async function startListen(){
+  try{
+    _audioStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+  }catch(e){
+    setPMBubble(e.name==='NotAllowedError'?'Allow mic in System Settings!':'Mic not found.');
+    return;
+  }
+  S.listening=true;_audioChunks=[];
+  document.getElementById('micBtn').classList.add('on');
+  document.getElementById('micHint').textContent='Tap to stop';
+  setCreatureMood('pmCreature','listening');setPMBubble('...');
+
+  const mimeOrder=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
+  const mime=mimeOrder.find(m=>MediaRecorder.isTypeSupported(m))||'';
+  try{_mediaRec=mime?new MediaRecorder(_audioStream,{mimeType:mime}):new MediaRecorder(_audioStream);}
+  catch(e){_mediaRec=new MediaRecorder(_audioStream);}
+  _mediaRec.ondataavailable=e=>{if(e.data.size>0)_audioChunks.push(e.data);};
+  _mediaRec.onstop=_transcribeRecording;
+  _mediaRec.start(100);
+  setTimeout(()=>{if(_mediaRec&&_mediaRec.state==='recording')_mediaRec.stop();},8000);
+}
+
+async function _transcribeRecording(){
+  stopListen();
+  if(!_audioChunks.length){setPMBubble("Nothing recorded — tap and speak!");return;}
+  setPMBubble('…');setCreatureMood('pmCreature','listening');
+  const blob=new Blob(_audioChunks,{type:_mediaRec.mimeType});
+  const base64=await new Promise(res=>{
+    const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.readAsDataURL(blob);
+  });
+  if(_audioStream){_audioStream.getTracks().forEach(t=>t.stop());_audioStream=null;}
+  const recMime=_mediaRec?_mediaRec.mimeType||'audio/mp4':'audio/mp4';
+  const _ctrl=new AbortController();
+  const _timer=setTimeout(()=>_ctrl.abort(),22000);
+  try{
+    const resp=await fetch('/api/speech/transcribe',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({audio:base64,mimeType:recMime}),
+      signal:_ctrl.signal});
+    clearTimeout(_timer);
+    const data=await resp.json();
+    if(data.transcript?.trim()){
+      handleInput(data.transcript.trim());
+    }else{
+      setPMBubble("Didn't catch that — try again!");
+      setCreatureMood('pmCreature','normal');
+    }
+  }catch(e){
+    clearTimeout(_timer);
+    setPMBubble("Didn't catch that — try again!");
+    setCreatureMood('pmCreature','normal');
+  }
+}
+
 function stopListen(){
-  S.listening=false;try{rec?.stop();}catch(e){}
+  S.listening=false;
   document.getElementById('micBtn').classList.remove('on');
   document.getElementById('micHint').textContent='Tap to speak';
   setCreatureMood('pmCreature','normal');
@@ -1992,7 +2172,52 @@ function updateParentPanel(){
 }
 
 // ─── TTS / BUBBLE ────────────────────────────────────────────────
-function speak(text,cb){if(!window.speechSynthesis){cb?.();return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=0.88;u.pitch=1.3;u.volume=1;u.onend=()=>cb?.();window.speechSynthesis.speak(u);}
+// ─── TTS — OpenAI nova voice, fallback to Web Speech API ─────────
+let _ttsAudio=null,_ttsVoice=null;
+function _loadVoice(){
+  const voices=window.speechSynthesis?.getVoices()||[];
+  if(!voices.length)return;
+  const picks=['Samantha','Samantha (Enhanced)','Nicky','Karen','Moira','Tessa','Victoria'];
+  _ttsVoice=picks.map(n=>voices.find(v=>v.name===n)).find(Boolean)
+    ||voices.find(v=>v.lang==='en-US'&&!v.name.toLowerCase().includes('india'))
+    ||voices.find(v=>v.lang.startsWith('en-')&&!v.name.toLowerCase().includes('india'));
+}
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=_loadVoice;_loadVoice();setTimeout(_loadVoice,800);}
+
+function _speakFallback(text,cb){
+  if(!window.speechSynthesis){cb?.();return;}
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  if(_ttsVoice)u.voice=_ttsVoice;
+  u.rate=0.9;u.pitch=1.4;u.volume=1;
+  u.onend=()=>cb?.();
+  window.speechSynthesis.speak(u);
+}
+
+async function speak(text,cb){
+  if(!text){cb?.();return;}
+  window.speechSynthesis?.cancel();
+  if(_ttsAudio){_ttsAudio.pause();_ttsAudio.src='';_ttsAudio=null;}
+  try{
+    const ctrl=new AbortController();
+    const t=setTimeout(()=>ctrl.abort(),12000);
+    const resp=await fetch('/api/tts',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,voice:'nova'}),
+      signal:ctrl.signal});
+    clearTimeout(t);
+    const data=await resp.json();
+    if(data.audio){
+      _ttsAudio=new Audio('data:audio/mpeg;base64,'+data.audio);
+      _ttsAudio.onended=()=>{_ttsAudio=null;cb?.();};
+      _ttsAudio.onerror=()=>{_ttsAudio=null;_speakFallback(text,cb);};
+      const p=_ttsAudio.play();
+      if(p)p.catch(()=>{_ttsAudio=null;_speakFallback(text,cb);});
+      return;
+    }
+  }catch(e){}
+  _speakFallback(text,cb);
+}
 function setPMBubble(text,dim=false,mood='normal'){const b=document.getElementById('pmBubble');b.textContent=text;b.className='pm-bubble'+(dim?' dim':'')+(mood==='tired'?' tired':'')+(mood==='happy'?' happy':'');}
 function setCreatureMood(id,mood){const el=document.getElementById(id);el.className='';['listening','speaking','happy'].forEach(m=>{if(mood===m)el.classList.add(m);});if(id==='pmCreature')renderCreature(id,mood);}
 

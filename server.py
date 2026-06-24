@@ -6,6 +6,7 @@ import json
 import urllib.request
 import urllib.parse
 import ssl
+import speech_recognition as sr
 from dotenv import load_dotenv
 
 # Fix SSL certificate verification on macOS
@@ -93,6 +94,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 return self.child_recent_attempts(data)
             elif path == '/api/child/lookup':
                 return self.child_lookup(data)
+            elif path == '/api/child/set-password':
+                return self.child_set_password(data)
+            elif path == '/api/child/signin':
+                return self.child_signin(data)
             elif path == '/api/otp/send':
                 return self.otp_send(data)
             elif path == '/api/otp/verify':
@@ -105,6 +110,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 return self.friend_get(data)
             elif path == '/api/friend/practiced':
                 return self.friend_practiced(data)
+            elif path == '/api/speech/transcribe':
+                return self.speech_transcribe(data)
+            elif path == '/api/tts':
+                return self.openai_tts(data)
         except Exception as e:
             return {'error': str(e)}
         return None
@@ -323,6 +332,79 @@ Reply rules:
             return {'child': result[0]}
         return {'child': None}
 
+    def speech_transcribe(self, data):
+        import tempfile, os as _os, base64 as _b64
+        audio_b64 = data.get('audio', '')
+        mime = data.get('mimeType', 'audio/webm')
+        if not audio_b64:
+            return {'error': 'No audio data'}
+        ext = '.webm' if 'webm' in mime else '.mp4' if 'mp4' in mime else '.wav'
+        tmp = None
+        try:
+            audio_bytes = _b64.b64decode(audio_b64)
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as f:
+                f.write(audio_bytes)
+                tmp = f.name
+            boundary = 'MumbleBoundary888'
+            body = (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n'
+                f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n'
+                f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio{ext}"\r\nContent-Type: {mime}\r\n\r\n'
+            ).encode() + audio_bytes + f'\r\n--{boundary}--\r\n'.encode()
+            req = urllib.request.Request('https://api.openai.com/v1/audio/transcriptions', method='POST')
+            req.add_header('Authorization', f'Bearer {OPENAI_KEY}')
+            req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+            req.data = body
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=20) as resp:
+                result = json.loads(resp.read().decode())
+                return {'transcript': result.get('text', '').strip()}
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            if tmp:
+                try: _os.unlink(tmp)
+                except: pass
+
+    def openai_tts(self, data):
+        import base64 as _b64
+        text = data.get('text', '').strip()
+        if not text:
+            return {'error': 'No text'}
+        voice = data.get('voice', 'nova')
+        payload = {'model': 'tts-1', 'input': text[:4096], 'voice': voice}
+        req = urllib.request.Request('https://api.openai.com/v1/audio/speech', method='POST')
+        req.add_header('Authorization', f'Bearer {OPENAI_KEY}')
+        req.add_header('Content-Type', 'application/json')
+        req.data = json.dumps(payload).encode()
+        try:
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=15) as resp:
+                return {'audio': _b64.b64encode(resp.read()).decode()}
+        except Exception as e:
+            return {'error': str(e)}
+
+    def child_set_password(self, data):
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+        if not password:
+            return {'error': 'Password required'}
+        self.supabase_call('PATCH', 'children', {'password': password}, filters={'phone': f'eq.{email}'})
+        return {'ok': True}
+
+    def child_signin(self, data):
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+        if not email or not password:
+            return {'error': 'Email and password required'}
+        result = self.supabase_call('GET', 'children', filters={'phone': f'eq.{email}'})
+        if not isinstance(result, list) or len(result) == 0:
+            return {'error': 'No account found for this email.'}
+        child = result[0]
+        if not child.get('password'):
+            return {'error': 'No password set yet — please create an account first.'}
+        if child['password'] != password:
+            return {'error': 'Incorrect password. Try again.'}
+        return {'child': child}
+
     def otp_send(self, data):
         email = data.get('email', '').strip().lower()
         if '@' not in email or '.' not in email.split('@')[-1]:
@@ -361,14 +443,10 @@ Reply rules:
             except urllib.error.HTTPError as e:
                 err = e.read().decode()
                 print(f'[OTP] Resend error: {err} — code for {email}: {code}')
-                try:
-                    msg = json.loads(err).get('message', err)
-                except Exception:
-                    msg = err
-                return {'ok': True, 'dev': True, 'resend_error': msg}
+                return {'ok': True, 'dev': True, 'code': code}
         else:
             print(f'\n📧 OTP for {email}: {code}\n')
-            return {'ok': True, 'dev': True}
+            return {'ok': True, 'dev': True, 'code': code}
 
     def otp_verify(self, data):
         email = data.get('email', '').strip().lower()
@@ -489,7 +567,7 @@ Reply rules:
 
         return {'friendship': fs, 'both_today': friend_practiced}
 
-PORT = 3456
+PORT = int(os.environ.get('PORT', 3456))
 Handler = ProxyHandler
 
 def start():
@@ -497,8 +575,10 @@ def start():
     print(f"✓ Supabase configured (key kept server-side)")
     print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "⚠️  No OPENAI_API_KEY found in .env.local")
     print(f"✓ Email OTP via Resend ({RESEND_KEY[:8]}...)" if RESEND_KEY else "⚠️  No RESEND_KEY — OTP codes will print to terminal")
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    class ThreadedServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+        allow_reuse_address = True
+        daemon_threads = True
+    with ThreadedServer(("", PORT), Handler) as httpd:
         httpd.serve_forever()
 
 if __name__ == '__main__':

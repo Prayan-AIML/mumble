@@ -5,6 +5,19 @@ import os, sys, threading, time
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         'Mumble.app', 'Contents', 'Resources', 'MumbleIcon.icns')
+
+# Set dock icon via AppKit before anything else loads
+try:
+    from AppKit import NSApplication, NSImage
+    _app = NSApplication.sharedApplication()
+    if os.path.exists(ICON_PATH):
+        _img = NSImage.alloc().initWithContentsOfFile_(ICON_PATH)
+        _app.setApplicationIconImage_(_img)
+except Exception:
+    pass
+
 import server
 
 def run_server():
@@ -18,9 +31,9 @@ import webview
 window = webview.create_window(
     'Mumble',
     'http://localhost:3456',
-    width=390,
-    height=820,
-    resizable=False,
-    min_size=(390, 600),
+    width=1100,
+    height=720,
+    resizable=True,
+    min_size=(900, 600),
 )
-webview.start()
+webview.start(icon=ICON_PATH if os.path.exists(ICON_PATH) else None)
