@@ -19,11 +19,12 @@ jobs:
       - name: Build
         run: |
           pyinstaller \
-            --onefile \
+            --onedir \
             --windowed \
             --name "Mumble" \
+            --icon "MumbleIcon.icns" \
             --collect-all webview \
-            --add-data "Mumble.app/Contents/Resources/MumbleIcon.icns:." \
+            --add-data "MumbleIcon.icns:." \
             mumble_app_release.py
       - name: Package as DMG
         run: |
@@ -66,9 +67,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            python3-gi python3-gi-cairo gir1.2-gtk-3.0 \
-            gir1.2-webkit2-4.1 libgtk-3-dev \
-            libwebkit2gtk-4.1-dev
+            libgirepository1.0-dev \
+            python3-gi python3-gi-cairo \
+            gir1.2-gtk-3.0 gir1.2-webkit2-4.1 \
+            libgtk-3-dev libwebkit2gtk-4.1-dev
       - name: Install Python dependencies
         run: pip install pyinstaller "pywebview[gtk]"
       - name: Build
