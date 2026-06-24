@@ -6,7 +6,7 @@ Replace MUMBLE_URL with your Railway URL after deploying.
 import os, sys
 import webview
 
-MUMBLE_URL = os.environ.get('MUMBLE_URL', 'https://REPLACE_WITH_YOUR_RAILWAY_URL.railway.app')
+MUMBLE_URL = os.environ.get('MUMBLE_URL', 'https://web-production-5fe9a3.up.railway.app')
 
 # macOS dock icon
 try:
