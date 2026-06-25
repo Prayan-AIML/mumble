@@ -20,6 +20,18 @@ try:
 except Exception:
     pass
 
+import platform, pathlib
+
+# Persist browser state (mic permissions, login session) across restarts
+_sys = platform.system()
+if _sys == 'Darwin':
+    STORAGE = str(pathlib.Path.home() / 'Library' / 'Application Support' / 'Mumble')
+elif _sys == 'Windows':
+    STORAGE = str(pathlib.Path.home() / 'AppData' / 'Local' / 'Mumble')
+else:
+    STORAGE = str(pathlib.Path.home() / '.config' / 'Mumble')
+pathlib.Path(STORAGE).mkdir(parents=True, exist_ok=True)
+
 window = webview.create_window(
     'Mumble',
     MUMBLE_URL,
@@ -28,4 +40,4 @@ window = webview.create_window(
     resizable=True,
     min_size=(900, 600),
 )
-webview.start()
+webview.start(private_mode=False, storage_path=STORAGE)

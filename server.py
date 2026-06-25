@@ -417,6 +417,8 @@ Reply rules:
         if isinstance(stored, dict) and stored.get('error'):
             return {'error': 'DB error — run: ALTER TABLE otps DISABLE ROW LEVEL SECURITY; in Supabase'}
 
+        # Always return the code so the app can auto-fill it.
+        # Also attempt to send via email — but delivery is best-effort only.
         if RESEND_KEY:
             payload = {
                 'from': 'Mumble <onboarding@resend.dev>',
@@ -438,14 +440,10 @@ Reply rules:
                 with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
                     resp.read()
                 print(f'[OTP] Sent to {email}')
-                return {'ok': True}
-            except urllib.error.HTTPError as e:
-                err = e.read().decode()
-                print(f'[OTP] Resend error: {err} — code for {email}: {code}')
-                return {'ok': True, 'dev': True, 'code': code}
-        else:
-            print(f'\n📧 OTP for {email}: {code}\n')
-            return {'ok': True, 'dev': True, 'code': code}
+            except Exception as e:
+                print(f'[OTP] Email failed: {e}')
+        print(f'[OTP] Code for {email}: {code}')
+        return {'ok': True, 'dev': True, 'code': code}
 
     def otp_verify(self, data):
         email = data.get('email', '').strip().lower()

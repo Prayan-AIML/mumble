@@ -28,6 +28,10 @@ t.start()
 time.sleep(1.5)  # wait for server to be ready
 
 import webview
+
+STORAGE = os.path.expanduser('~/Library/Application Support/Mumble')
+os.makedirs(STORAGE, exist_ok=True)
+
 window = webview.create_window(
     'Mumble',
     'http://localhost:3456',
@@ -36,4 +40,8 @@ window = webview.create_window(
     resizable=True,
     min_size=(900, 600),
 )
-webview.start(icon=ICON_PATH if os.path.exists(ICON_PATH) else None)
+webview.start(
+    icon=ICON_PATH if os.path.exists(ICON_PATH) else None,
+    private_mode=False,
+    storage_path=STORAGE,
+)
