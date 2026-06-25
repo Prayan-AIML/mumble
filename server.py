@@ -28,6 +28,9 @@ OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
 RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
 GMAIL_USER = os.getenv('GMAIL_USER', '').strip()
 GMAIL_PASS = os.getenv('GMAIL_PASS', '').strip()
+BREVO_KEY = os.getenv('BREVO_API_KEY', '').strip()
+# Sender address shown on the OTP email (defaults to the Gmail you verified in Brevo)
+SENDER_EMAIL = os.getenv('SENDER_EMAIL', GMAIL_USER or 'no-reply@mumble.app').strip()
 import random, datetime, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -445,26 +448,49 @@ Reply rules:
           <p style="color:#999;font-size:13px">Expires in 10 minutes. Never share this code.</p>
         </div>'''
 
-        # Send the email in the BACKGROUND so the request never blocks on SMTP.
-        # We also return the code immediately so the app auto-fills instantly —
-        # the email still lands in the inbox a moment later.
-        if GMAIL_USER and GMAIL_PASS:
-            def _send_email():
-                try:
-                    msg = MIMEMultipart('alternative')
-                    msg['Subject'] = f'{code} is your Mumble code'
-                    msg['From'] = f'Mumble <{GMAIL_USER}>'
-                    msg['To'] = email
-                    msg.attach(MIMEText(html, 'html'))
-                    with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=15, context=ssl_ctx) as s:
-                        s.login(GMAIL_USER, GMAIL_PASS)
-                        s.sendmail(GMAIL_USER, email, msg.as_string())
-                    print(f'[OTP] Sent via Gmail to {email}')
-                except Exception as e:
-                    print(f'[OTP] Gmail failed: {e}')
-            threading.Thread(target=_send_email, daemon=True).start()
+        # PRIMARY: Brevo HTTP API — works on Railway (SMTP ports are blocked there),
+        # sends to ANY recipient, free up to 300/day. Sent synchronously because
+        # HTTP is fast; we only return success once it's actually accepted.
+        if BREVO_KEY:
+            try:
+                payload = {
+                    'sender': {'name': 'Mumble', 'email': SENDER_EMAIL},
+                    'to': [{'email': email}],
+                    'subject': f'{code} is your Mumble code',
+                    'htmlContent': html,
+                }
+                req = urllib.request.Request('https://api.brevo.com/v3/smtp/email', method='POST')
+                req.add_header('api-key', BREVO_KEY)
+                req.add_header('Content-Type', 'application/json')
+                req.add_header('Accept', 'application/json')
+                req.data = json.dumps(payload).encode()
+                with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
+                    resp.read()
+                print(f'[OTP] Sent via Brevo to {email}')
+                return {'ok': True}
+            except urllib.error.HTTPError as e:
+                print(f'[OTP] Brevo error {e.code}: {e.read().decode()[:300]}')
+            except Exception as e:
+                print(f'[OTP] Brevo failed: {e}')
 
-        print(f'[OTP] Code for {email}: {code}')
+        # FALLBACK: Gmail SMTP (works locally; usually blocked on Railway).
+        if GMAIL_USER and GMAIL_PASS:
+            try:
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'{code} is your Mumble code'
+                msg['From'] = f'Mumble <{GMAIL_USER}>'
+                msg['To'] = email
+                msg.attach(MIMEText(html, 'html'))
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=15, context=ssl_ctx) as s:
+                    s.login(GMAIL_USER, GMAIL_PASS)
+                    s.sendmail(GMAIL_USER, email, msg.as_string())
+                print(f'[OTP] Sent via Gmail to {email}')
+                return {'ok': True}
+            except Exception as e:
+                print(f'[OTP] Gmail failed: {e}')
+
+        # LAST RESORT (no email service configured, e.g. local dev): auto-fill.
+        print(f'[OTP] No email delivery — code for {email}: {code}')
         return {'ok': True, 'dev': True, 'code': code}
 
     def otp_verify(self, data):
@@ -594,7 +620,12 @@ def start():
     print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
     print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
     print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
-    print(f"✓ Email OTP via Gmail ({GMAIL_USER})" if GMAIL_USER else "⚠️  No GMAIL_USER — OTP codes will auto-fill in app")
+    if BREVO_KEY:
+        print(f"✓ Email OTP via Brevo (sender: {SENDER_EMAIL})")
+    elif GMAIL_USER:
+        print(f"✓ Email OTP via Gmail SMTP ({GMAIL_USER}) — note: may be blocked on Railway")
+    else:
+        print("⚠️  No email service — OTP codes will auto-fill in app (local dev only)")
     class ThreadedServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         allow_reuse_address = True
         daemon_threads = True

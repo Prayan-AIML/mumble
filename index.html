@@ -1071,12 +1071,13 @@ async function goOb2(resend=false){
   if(res.error){
     document.getElementById('otpSubText').textContent='❌ '+res.error;
   } else if(res.dev&&res.code){
-    // Email service unavailable — auto-fill and verify silently
+    // Only reaches here in LOCAL dev when no email service is configured.
     res.code.split('').forEach((d,i)=>{const el=document.getElementById('otp'+i);if(el)el.value=d;});
     document.getElementById('otpSubText').textContent='Verifying…';
     await verifyOTP();
   } else {
-    document.getElementById('otpSubText').textContent='Code sent! Check your inbox at '+em;
+    document.getElementById('otpSubText').textContent='📧 Code sent! Check your inbox (and spam) at '+em;
+    document.getElementById('otp0').focus();
   }
 }
 function otpNext(el,nextIdx){
