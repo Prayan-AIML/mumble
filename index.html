@@ -1532,7 +1532,7 @@ function toggleListen(){
 
 async function startListen(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    setPMBubble('Open Mumble via the app, not a browser tab — mic needs the desktop app.');
+    setPMBubble('Allow microphone access: System Settings → Privacy & Security → Microphone → enable Mumble.');
     return;
   }
   try{

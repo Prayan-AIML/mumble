@@ -32,12 +32,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
-    def _send_security_headers(self):
-        # These headers make WKWebView treat localhost as a secure context,
-        # which is required for navigator.mediaDevices (mic) to be available.
-        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
-        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
-
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
             try:
@@ -47,7 +41,6 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.send_header('Content-Length', len(encoded))
-                self._send_security_headers()
                 self.end_headers()
                 self.wfile.write(encoded)
             except:
