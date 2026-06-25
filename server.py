@@ -26,10 +26,11 @@ SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
 OPENAI_KEY = os.getenv('OPENAI_API_KEY', '').strip()
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
 RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
+MAILJET_KEY = os.getenv('MAILJET_KEY', '').strip()
+MAILJET_SECRET = os.getenv('MAILJET_SECRET', '').strip()
 GMAIL_USER = os.getenv('GMAIL_USER', '').strip()
 GMAIL_PASS = os.getenv('GMAIL_PASS', '').strip()
 BREVO_KEY = os.getenv('BREVO_API_KEY', '').strip()
-# Sender address shown on the OTP email (defaults to the Gmail you verified in Brevo)
 SENDER_EMAIL = os.getenv('SENDER_EMAIL', GMAIL_USER or 'no-reply@mumble.app').strip()
 import random, datetime, smtplib
 from email.mime.text import MIMEText
@@ -448,9 +449,33 @@ Reply rules:
           <p style="color:#999;font-size:13px">Expires in 10 minutes. Never share this code.</p>
         </div>'''
 
-        # PRIMARY: Brevo HTTP API — works on Railway (SMTP ports are blocked there),
-        # sends to ANY recipient, free up to 300/day. Sent synchronously because
-        # HTTP is fast; we only return success once it's actually accepted.
+        # PRIMARY: Mailjet HTTP API — works on Railway, sends to any recipient, free 200/day.
+        if MAILJET_KEY and MAILJET_SECRET:
+            try:
+                import base64 as _b64mj
+                creds = _b64mj.b64encode(f'{MAILJET_KEY}:{MAILJET_SECRET}'.encode()).decode()
+                payload = {
+                    'Messages': [{
+                        'From': {'Email': SENDER_EMAIL, 'Name': 'Mumble'},
+                        'To': [{'Email': email}],
+                        'Subject': f'{code} is your Mumble code',
+                        'HTMLPart': html,
+                    }]
+                }
+                req = urllib.request.Request('https://api.mailjet.com/v3.1/send', method='POST')
+                req.add_header('Authorization', f'Basic {creds}')
+                req.add_header('Content-Type', 'application/json')
+                req.data = json.dumps(payload).encode()
+                with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
+                    resp.read()
+                print(f'[OTP] Sent via Mailjet to {email}')
+                return {'ok': True}
+            except urllib.error.HTTPError as e:
+                print(f'[OTP] Mailjet error {e.code}: {e.read().decode()[:300]}')
+            except Exception as e:
+                print(f'[OTP] Mailjet failed: {e}')
+
+        # SECONDARY: Brevo HTTP API — also works on Railway, free up to 300/day.
         if BREVO_KEY:
             try:
                 payload = {
@@ -620,7 +645,9 @@ def start():
     print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
     print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
     print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
-    if BREVO_KEY:
+    if MAILJET_KEY:
+        print(f"✓ Email OTP via Mailjet (sender: {SENDER_EMAIL})")
+    elif BREVO_KEY:
         print(f"✓ Email OTP via Brevo (sender: {SENDER_EMAIL})")
     elif GMAIL_USER:
         print(f"✓ Email OTP via Gmail SMTP ({GMAIL_USER}) — note: may be blocked on Railway")
