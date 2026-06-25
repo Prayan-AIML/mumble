@@ -25,7 +25,11 @@ SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
 OPENAI_KEY = os.getenv('OPENAI_API_KEY', '').strip()
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
 RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
-import random, datetime
+GMAIL_USER = os.getenv('GMAIL_USER', '').strip()
+GMAIL_PASS = os.getenv('GMAIL_PASS', '').strip()
+import random, datetime, smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -417,32 +421,29 @@ Reply rules:
         if isinstance(stored, dict) and stored.get('error'):
             return {'error': 'DB error — run: ALTER TABLE otps DISABLE ROW LEVEL SECURITY; in Supabase'}
 
-        # Always return the code so the app can auto-fill it.
-        # Also attempt to send via email — but delivery is best-effort only.
-        if RESEND_KEY:
-            payload = {
-                'from': 'Mumble <onboarding@resend.dev>',
-                'to': [email],
-                'subject': f'{code} is your Mumble verification code',
-                'html': f'''<div style="font-family:sans-serif;max-width:420px;padding:32px">
-                  <p style="font-size:28px;margin:0 0 8px">🥚 Mumble</p>
-                  <p style="color:#555;font-size:15px;margin:0 0 20px">Your verification code:</p>
-                  <p style="font-size:48px;font-weight:800;letter-spacing:10px;color:#7c3aed;margin:0 0 20px">{code}</p>
-                  <p style="color:#999;font-size:13px">Expires in 10 minutes. Never share this code.</p>
-                </div>'''
-            }
-            req = urllib.request.Request('https://api.resend.com/emails', method='POST')
-            req.add_header('Authorization', f'Bearer {RESEND_KEY}')
-            req.add_header('Content-Type', 'application/json')
-            req.add_header('User-Agent', 'Mozilla/5.0')
-            req.data = json.dumps(payload).encode()
+        html = f'''<div style="font-family:sans-serif;max-width:420px;padding:32px">
+          <p style="font-size:28px;margin:0 0 8px">🥚 Mumble</p>
+          <p style="color:#555;font-size:15px;margin:0 0 20px">Your verification code:</p>
+          <p style="font-size:48px;font-weight:800;letter-spacing:10px;color:#7c3aed;margin:0 0 20px">{code}</p>
+          <p style="color:#999;font-size:13px">Expires in 10 minutes. Never share this code.</p>
+        </div>'''
+
+        if GMAIL_USER and GMAIL_PASS:
             try:
-                with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
-                    resp.read()
-                print(f'[OTP] Sent to {email}')
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'{code} is your Mumble code'
+                msg['From'] = f'Mumble <{GMAIL_USER}>'
+                msg['To'] = email
+                msg.attach(MIMEText(html, 'html'))
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=ssl_ctx) as s:
+                    s.login(GMAIL_USER, GMAIL_PASS)
+                    s.sendmail(GMAIL_USER, email, msg.as_string())
+                print(f'[OTP] Sent via Gmail to {email}')
+                return {'ok': True}
             except Exception as e:
-                print(f'[OTP] Email failed: {e}')
-        print(f'[OTP] Code for {email}: {code}')
+                print(f'[OTP] Gmail failed: {e}')
+
+        print(f'[OTP] No email sender — code for {email}: {code}')
         return {'ok': True, 'dev': True, 'code': code}
 
     def otp_verify(self, data):
@@ -572,7 +573,7 @@ def start():
     print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
     print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
     print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
-    print(f"✓ Email OTP via Resend ({RESEND_KEY[:8]}...)" if RESEND_KEY else "⚠️  No RESEND_KEY — OTP codes will print to terminal")
+    print(f"✓ Email OTP via Gmail ({GMAIL_USER})" if GMAIL_USER else "⚠️  No GMAIL_USER — OTP codes will auto-fill in app")
     class ThreadedServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         allow_reuse_address = True
         daemon_threads = True
