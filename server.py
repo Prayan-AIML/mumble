@@ -353,8 +353,8 @@ Reply rules:
         try:
             audio_bytes = _b64.b64decode(audio_b64)
             boundary = 'MumbleBoundary888'
-            prompt = f'A young child is practising speech. Likely words include: {hint}.' if hint else \
-                     'A young child is practising saying simple words and sounds.'
+            prompt = f'Transcribe this English speech only. Do not translate. A young child is practising the word: {hint}.' if hint else \
+                     'Transcribe this English speech only. Do not translate. A young child is saying simple English words.'
             parts = (
                 f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-4o-mini-transcribe\r\n'
                 f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n'
@@ -374,7 +374,7 @@ Reply rules:
                 parts = (
                     f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n'
                     f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n'
-                    f'--{boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n{prompt}\r\n'
+                    f'--{boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nEnglish only. {prompt}\r\n'
                     f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio{ext}"\r\nContent-Type: {mime}\r\n\r\n'
                 ).encode() + audio_bytes + f'\r\n--{boundary}--\r\n'.encode()
                 req = urllib.request.Request('https://api.openai.com/v1/audio/transcriptions', method='POST')
