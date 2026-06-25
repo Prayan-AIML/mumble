@@ -20,11 +20,11 @@ except ImportError:
 # Load .env.local
 load_dotenv('.env.local')
 
-SUPABASE_URL = os.getenv('SUPABASE_URL', '').rstrip('/')
-SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '')
-OPENAI_KEY = os.getenv('OPENAI_API_KEY', '')
-OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
-RESEND_KEY = os.getenv('RESEND_KEY', '')
+SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip().rstrip('/')
+SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
+OPENAI_KEY = os.getenv('OPENAI_API_KEY', '').strip()
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
+RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
 import random, datetime
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
@@ -571,8 +571,9 @@ Handler = ProxyHandler
 
 def start():
     print(f"🚀 Mumble server running at http://localhost:{PORT}/")
-    print(f"✓ Supabase configured (key kept server-side)")
-    print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "⚠️  No OPENAI_API_KEY found in .env.local")
+    print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
+    print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
+    print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
     print(f"✓ Email OTP via Resend ({RESEND_KEY[:8]}...)" if RESEND_KEY else "⚠️  No RESEND_KEY — OTP codes will print to terminal")
     class ThreadedServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         allow_reuse_address = True
