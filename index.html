@@ -1531,11 +1531,21 @@ function toggleListen(){
 }
 
 async function startListen(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setPMBubble('Open Mumble via the app, not a browser tab — mic needs the desktop app.');
+    return;
+  }
   try{
     _audioStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
   }catch(e){
-    setPMBubble(e.name==='NotAllowedError'?'Allow mic in System Settings!':'Mic not found.');
-    return;
+    if(e.name==='NotAllowedError'||e.name==='PermissionDeniedError'){
+      setPMBubble('Allow microphone: System Settings → Privacy → Microphone → Mumble ✓');
+    }else if(e.name==='NotFoundError'){
+      setPMBubble('No microphone detected — plug one in and try again.');
+    }else{
+      setPMBubble('Mic blocked ('+e.name+'). Restart the app and allow mic when asked.');
+    }
+    stopListen();return;
   }
   S.listening=true;_audioChunks=[];
   document.getElementById('micBtn').classList.add('on');
