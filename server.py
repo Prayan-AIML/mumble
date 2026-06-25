@@ -3,6 +3,7 @@ import http.server
 import socketserver
 import os
 import json
+import threading
 import urllib.request
 import urllib.parse
 import ssl
@@ -444,22 +445,26 @@ Reply rules:
           <p style="color:#999;font-size:13px">Expires in 10 minutes. Never share this code.</p>
         </div>'''
 
+        # Send the email in the BACKGROUND so the request never blocks on SMTP.
+        # We also return the code immediately so the app auto-fills instantly —
+        # the email still lands in the inbox a moment later.
         if GMAIL_USER and GMAIL_PASS:
-            try:
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = f'{code} is your Mumble code'
-                msg['From'] = f'Mumble <{GMAIL_USER}>'
-                msg['To'] = email
-                msg.attach(MIMEText(html, 'html'))
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=ssl_ctx) as s:
-                    s.login(GMAIL_USER, GMAIL_PASS)
-                    s.sendmail(GMAIL_USER, email, msg.as_string())
-                print(f'[OTP] Sent via Gmail to {email}')
-                return {'ok': True}
-            except Exception as e:
-                print(f'[OTP] Gmail failed: {e}')
+            def _send_email():
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = f'{code} is your Mumble code'
+                    msg['From'] = f'Mumble <{GMAIL_USER}>'
+                    msg['To'] = email
+                    msg.attach(MIMEText(html, 'html'))
+                    with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=15, context=ssl_ctx) as s:
+                        s.login(GMAIL_USER, GMAIL_PASS)
+                        s.sendmail(GMAIL_USER, email, msg.as_string())
+                    print(f'[OTP] Sent via Gmail to {email}')
+                except Exception as e:
+                    print(f'[OTP] Gmail failed: {e}')
+            threading.Thread(target=_send_email, daemon=True).start()
 
-        print(f'[OTP] No email sender — code for {email}: {code}')
+        print(f'[OTP] Code for {email}: {code}')
         return {'ok': True, 'dev': True, 'code': code}
 
     def otp_verify(self, data):
