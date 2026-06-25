@@ -1517,41 +1517,57 @@ function renderPMDots(){
   }
 }
 
-// ─── MIC — MediaRecorder → Whisper ───────────────────────────────
-let _mediaRec=null,_audioChunks=[],_audioStream=null;
+// ─── MIC — Python native (pywebview bridge) → Whisper ────────────
+let _mediaRec=null,_audioChunks=[],_audioStream=null,_pyMicActive=false;
+
+function _hasPyMic(){return!!(window.pywebview&&window.pywebview.api&&window.pywebview.api.start);}
 
 function toggleListen(){
   if(S.busy)return;
   if(S.listening){
-    if(_mediaRec&&_mediaRec.state!=='inactive')_mediaRec.stop();
-    else stopListen();
+    if(_pyMicActive){
+      window.pywebview.api.stop().then(r=>{_pyMicActive=false;stopListen();_sendToWhisper(r);});
+    }else if(_mediaRec&&_mediaRec.state!=='inactive'){
+      _mediaRec.stop();
+    }else{
+      stopListen();
+    }
     return;
   }
   startListen();
 }
 
 async function startListen(){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    setPMBubble('Allow microphone access: System Settings → Privacy & Security → Microphone → enable Mumble.');
-    return;
-  }
-  try{
-    _audioStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-  }catch(e){
-    if(e.name==='NotAllowedError'||e.name==='PermissionDeniedError'){
-      setPMBubble('Allow microphone: System Settings → Privacy → Microphone → Mumble ✓');
-    }else if(e.name==='NotFoundError'){
-      setPMBubble('No microphone detected — plug one in and try again.');
-    }else{
-      setPMBubble('Mic blocked ('+e.name+'). Restart the app and allow mic when asked.');
-    }
-    stopListen();return;
-  }
-  S.listening=true;_audioChunks=[];
+  S.listening=true;
   document.getElementById('micBtn').classList.add('on');
   document.getElementById('micHint').textContent='Tap to stop';
   setCreatureMood('pmCreature','listening');setPMBubble('...');
 
+  if(_hasPyMic()){
+    // Use Python native recording — bypasses all browser security issues
+    _pyMicActive=true;
+    await window.pywebview.api.start();
+    setTimeout(async()=>{
+      if(S.listening&&_pyMicActive){
+        const r=await window.pywebview.api.stop();
+        _pyMicActive=false;stopListen();_sendToWhisper(r);
+      }
+    },8000);
+    return;
+  }
+
+  // Fallback: browser getUserMedia (works on HTTPS)
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setPMBubble('No mic access — try the downloaded app instead of the browser.');
+    stopListen();return;
+  }
+  try{
+    _audioStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+  }catch(e){
+    setPMBubble(e.name==='NotAllowedError'?'Mic blocked — allow it in System Settings → Privacy → Microphone.':'No microphone found.');
+    stopListen();return;
+  }
+  _audioChunks=[];
   const mimeOrder=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
   const mime=mimeOrder.find(m=>MediaRecorder.isTypeSupported(m))||'';
   try{_mediaRec=mime?new MediaRecorder(_audioStream,{mimeType:mime}):new MediaRecorder(_audioStream);}
@@ -1565,30 +1581,27 @@ async function startListen(){
 async function _transcribeRecording(){
   stopListen();
   if(!_audioChunks.length){setPMBubble("Nothing recorded — tap and speak!");return;}
-  setPMBubble('…');setCreatureMood('pmCreature','listening');
   const blob=new Blob(_audioChunks,{type:_mediaRec.mimeType});
-  const base64=await new Promise(res=>{
-    const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.readAsDataURL(blob);
-  });
+  const b64=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.readAsDataURL(blob);});
   if(_audioStream){_audioStream.getTracks().forEach(t=>t.stop());_audioStream=null;}
-  const recMime=_mediaRec?_mediaRec.mimeType||'audio/mp4':'audio/mp4';
-  const _ctrl=new AbortController();
-  const _timer=setTimeout(()=>_ctrl.abort(),22000);
+  _sendToWhisper({audio:b64,mimeType:_mediaRec?.mimeType||'audio/mp4'});
+}
+
+async function _sendToWhisper(result){
+  if(!result||result.error||!result.audio){setPMBubble("Didn't catch that — try again!");setCreatureMood('pmCreature','normal');return;}
+  setPMBubble('…');setCreatureMood('pmCreature','listening');
+  const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),22000);
   try{
     const resp=await fetch('/api/speech/transcribe',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({audio:base64,mimeType:recMime}),
-      signal:_ctrl.signal});
-    clearTimeout(_timer);
+      body:JSON.stringify({audio:result.audio,mimeType:result.mimeType}),
+      signal:ctrl.signal});
+    clearTimeout(t);
     const data=await resp.json();
-    if(data.transcript?.trim()){
-      handleInput(data.transcript.trim());
-    }else{
-      setPMBubble("Didn't catch that — try again!");
-      setCreatureMood('pmCreature','normal');
-    }
+    if(data.transcript?.trim())handleInput(data.transcript.trim());
+    else{setPMBubble("Didn't catch that — try again!");setCreatureMood('pmCreature','normal');}
   }catch(e){
-    clearTimeout(_timer);
+    clearTimeout(t);
     setPMBubble("Didn't catch that — try again!");
     setCreatureMood('pmCreature','normal');
   }

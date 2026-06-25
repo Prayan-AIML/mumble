@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install pyinstaller "pywebview[mac]" pyobjc-framework-Cocoa
+        run: pip install pyinstaller "pywebview[mac]" pyobjc-framework-Cocoa sounddevice numpy
       - name: Build
         run: |
           pyinstaller \
@@ -42,14 +42,16 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install pyinstaller pywebview
+        run: pip install pyinstaller pywebview sounddevice numpy
       - name: Build
         run: |
           pyinstaller `
             --onefile `
             --windowed `
             --name "Mumble" `
+            --icon "MumbleIcon.ico" `
             --collect-all webview `
+            --collect-all sounddevice `
             mumble_app_release.py
       - uses: actions/upload-artifact@v4
         with:
@@ -72,13 +74,14 @@ jobs:
             gir1.2-gtk-3.0 gir1.2-webkit2-4.1 \
             libgtk-3-dev libwebkit2gtk-4.1-dev
       - name: Install Python dependencies
-        run: pip install pyinstaller "pywebview[gtk]"
+        run: pip install pyinstaller "pywebview[gtk]" sounddevice numpy
       - name: Build
         run: |
           pyinstaller \
             --onefile \
             --name "Mumble" \
             --collect-all webview \
+            --collect-all sounddevice \
             mumble_app_release.py
       - uses: actions/upload-artifact@v4
         with:
