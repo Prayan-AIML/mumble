@@ -1522,10 +1522,13 @@ let _mediaRec=null,_audioChunks=[],_audioStream=null,_pyMicActive=false;
 
 function _hasPyMic(){return!!(window.pywebview&&window.pywebview.api&&window.pywebview.api.start);}
 
+let _pollTimer=null;
+
 function toggleListen(){
   if(S.busy)return;
   if(S.listening){
     if(_pyMicActive){
+      if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null;}
       window.pywebview.api.stop().then(r=>{_pyMicActive=false;stopListen();_sendToWhisper(r);});
     }else if(_mediaRec&&_mediaRec.state!=='inactive'){
       _mediaRec.stop();
@@ -1540,19 +1543,22 @@ function toggleListen(){
 async function startListen(){
   S.listening=true;
   document.getElementById('micBtn').classList.add('on');
-  document.getElementById('micHint').textContent='Tap to stop';
+  document.getElementById('micHint').textContent='Listening… speak now';
   setCreatureMood('pmCreature','listening');setPMBubble('...');
 
   if(_hasPyMic()){
-    // Use Python native recording — bypasses all browser security issues
+    // Python native recording with auto silence-detection
     _pyMicActive=true;
     await window.pywebview.api.start();
-    setTimeout(async()=>{
-      if(S.listening&&_pyMicActive){
-        const r=await window.pywebview.api.stop();
+    // Poll: when the child stops talking, Python returns the audio automatically
+    _pollTimer=setInterval(async()=>{
+      if(!_pyMicActive){clearInterval(_pollTimer);_pollTimer=null;return;}
+      const r=await window.pywebview.api.poll();
+      if(r&&!r.recording){
+        clearInterval(_pollTimer);_pollTimer=null;
         _pyMicActive=false;stopListen();_sendToWhisper(r);
       }
-    },8000);
+    },150);
     return;
   }
 
@@ -1590,11 +1596,13 @@ async function _transcribeRecording(){
 async function _sendToWhisper(result){
   if(!result||result.error||!result.audio){setPMBubble("Didn't catch that — try again!");setCreatureMood('pmCreature','normal');return;}
   setPMBubble('…');setCreatureMood('pmCreature','listening');
+  let hint='';
+  try{hint=getDailyWord();}catch(e){}
   const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),22000);
   try{
     const resp=await fetch('/api/speech/transcribe',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({audio:result.audio,mimeType:result.mimeType}),
+      body:JSON.stringify({audio:result.audio,mimeType:result.mimeType,hint:hint}),
       signal:ctrl.signal});
     clearTimeout(t);
     const data=await resp.json();

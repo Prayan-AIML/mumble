@@ -337,37 +337,52 @@ Reply rules:
         return {'child': None}
 
     def speech_transcribe(self, data):
-        import tempfile, os as _os, base64 as _b64
+        import base64 as _b64
         audio_b64 = data.get('audio', '')
-        mime = data.get('mimeType', 'audio/webm')
+        mime = data.get('mimeType', 'audio/wav')
+        # A context hint (e.g. the target word) sharply improves accuracy
+        hint = str(data.get('hint', '')).strip()
         if not audio_b64:
             return {'error': 'No audio data'}
-        ext = '.webm' if 'webm' in mime else '.mp4' if 'mp4' in mime else '.wav'
-        tmp = None
+        ext = '.wav' if 'wav' in mime else '.webm' if 'webm' in mime else '.mp4' if 'mp4' in mime else '.wav'
         try:
             audio_bytes = _b64.b64decode(audio_b64)
-            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as f:
-                f.write(audio_bytes)
-                tmp = f.name
             boundary = 'MumbleBoundary888'
-            body = (
-                f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n'
+            prompt = f'A young child is practising speech. Likely words include: {hint}.' if hint else \
+                     'A young child is practising saying simple words and sounds.'
+            parts = (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-4o-mini-transcribe\r\n'
                 f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n'
+                f'--{boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n{prompt}\r\n'
                 f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio{ext}"\r\nContent-Type: {mime}\r\n\r\n'
             ).encode() + audio_bytes + f'\r\n--{boundary}--\r\n'.encode()
             req = urllib.request.Request('https://api.openai.com/v1/audio/transcriptions', method='POST')
             req.add_header('Authorization', f'Bearer {OPENAI_KEY}')
             req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
-            req.data = body
+            req.data = parts
             with urllib.request.urlopen(req, context=ssl_ctx, timeout=20) as resp:
                 result = json.loads(resp.read().decode())
                 return {'transcript': result.get('text', '').strip()}
+        except urllib.error.HTTPError as e:
+            # Fall back to whisper-1 if the newer model is unavailable
+            try:
+                parts = (
+                    f'--{boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n'
+                    f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n'
+                    f'--{boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n{prompt}\r\n'
+                    f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio{ext}"\r\nContent-Type: {mime}\r\n\r\n'
+                ).encode() + audio_bytes + f'\r\n--{boundary}--\r\n'.encode()
+                req = urllib.request.Request('https://api.openai.com/v1/audio/transcriptions', method='POST')
+                req.add_header('Authorization', f'Bearer {OPENAI_KEY}')
+                req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+                req.data = parts
+                with urllib.request.urlopen(req, context=ssl_ctx, timeout=20) as resp:
+                    result = json.loads(resp.read().decode())
+                    return {'transcript': result.get('text', '').strip()}
+            except Exception as e2:
+                return {'error': str(e2)}
         except Exception as e:
             return {'error': str(e)}
-        finally:
-            if tmp:
-                try: _os.unlink(tmp)
-                except: pass
 
     def openai_tts(self, data):
         import base64 as _b64

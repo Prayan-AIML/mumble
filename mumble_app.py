@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import os, sys, threading, time, base64, io, wave
-import numpy as np
-import sounddevice as sd
+import os, sys, threading, time
+from mic_api import MicAPI
 
 # Run from the app's own directory so server.py finds index.html and .env.local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -19,39 +18,6 @@ try:
         _app.setApplicationIconImage_(_img)
 except Exception:
     pass
-
-class MicAPI:
-    def __init__(self):
-        self._stream = None
-        self._chunks = []
-        self._recording = False
-
-    def start(self):
-        self._chunks = []
-        self._recording = True
-        def cb(indata, frames, t, status):
-            if self._recording:
-                self._chunks.append(indata.copy())
-        self._stream = sd.InputStream(samplerate=16000, channels=1, dtype='int16', callback=cb)
-        self._stream.start()
-        return {'ok': True}
-
-    def stop(self):
-        self._recording = False
-        if self._stream:
-            self._stream.stop()
-            self._stream.close()
-            self._stream = None
-        if not self._chunks:
-            return {'error': 'no audio'}
-        audio = np.concatenate(self._chunks)
-        buf = io.BytesIO()
-        with wave.open(buf, 'wb') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(16000)
-            wf.writeframes(audio.tobytes())
-        return {'audio': base64.b64encode(buf.getvalue()).decode(), 'mimeType': 'audio/wav'}
 
 _mic = MicAPI()
 
