@@ -544,13 +544,13 @@ Reply rules:
     def league_leaderboard(self, data):
         result = self.supabase_call('GET', 'children', filters={
             'order': 'xp.desc',
-            'limit': '30',
+            'limit': '50',
             'select': 'id,name,xp,day_streak,stage,sessions'
         })
         players = []
         if isinstance(result, list):
             for c in result:
-                if (c.get('xp') or 0) > 0 or (c.get('sessions') or 0) > 0:
+                if c.get('name'):
                     players.append({
                         'id': c['id'],
                         'name': c.get('name', 'Friend'),
