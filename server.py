@@ -545,7 +545,7 @@ Reply rules:
         result = self.supabase_call('GET', 'children', filters={
             'order': 'xp.desc',
             'limit': '30',
-            'select': 'id,name,xp,day_streak,stage'
+            'select': 'id,name,xp,day_streak,stage,sessions'
         })
         players = []
         if isinstance(result, list):

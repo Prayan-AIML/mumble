@@ -2242,13 +2242,13 @@ async function speak(text,cb){
     if(data.audio){
       _ttsAudio=new Audio('data:audio/mpeg;base64,'+data.audio);
       _ttsAudio.onended=()=>{_ttsAudio=null;cb?.();};
-      _ttsAudio.onerror=()=>{_ttsAudio=null;_speakFallback(text,cb);};
+      _ttsAudio.onerror=()=>{_ttsAudio=null;cb?.();};
       const p=_ttsAudio.play();
-      if(p)p.catch(()=>{_ttsAudio=null;_speakFallback(text,cb);});
+      if(p)p.catch(()=>{_ttsAudio=null;cb?.();});
       return;
     }
   }catch(e){}
-  _speakFallback(text,cb);
+  cb?.();
 }
 function setPMBubble(text,dim=false,mood='normal'){const b=document.getElementById('pmBubble');b.textContent=text;b.className='pm-bubble'+(dim?' dim':'')+(mood==='tired'?' tired':'')+(mood==='happy'?' happy':'');}
 function setCreatureMood(id,mood){const el=document.getElementById(id);el.className='';['listening','speaking','happy'].forEach(m=>{if(mood===m)el.classList.add(m);});if(id==='pmCreature')renderCreature(id,mood);}
