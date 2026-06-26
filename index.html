@@ -970,7 +970,7 @@ const S={
 };
 // Friend state (not persisted to Supabase directly, refreshed on load)
 let FRIEND={friendship:null, friend:null, bothToday:false};
-const ROUNDS_PER_SESSION=5;
+const ROUNDS_PER_SESSION=8;
 const DAILY_XP_GOAL=50;
 let rec=null,micStream=null,obOTP='';
 
@@ -1308,6 +1308,21 @@ async function loadState(){
     if(S.dailyXPDate!==today){S.dailyXP=0;S.dailyXPDate=today;}
     // Reset XP boost after use (single session)
     if(S.xpBoost===false)S.xpBoost=false;
+    // ONE-TIME: wipe XP gained TODAY only, keep every previous day's XP
+    const RESET_FLAG='mumble_reset_today_v1';
+    if(!localStorage.getItem(RESET_FLAG)){
+      const hist=JSON.parse(localStorage.getItem('mumble_xp_history')||'[]');
+      const todayEntry=hist.find(h=>h.date===today);
+      const todayXP=todayEntry?(todayEntry.xp||0):0;
+      if(todayXP>0){
+        S.xp=Math.max(0,(S.xp||0)-todayXP);
+        S.stage=STAGES.reduce((a,st,i)=>S.xp>=st.minXP?i:a,0);
+      }
+      localStorage.setItem('mumble_xp_history',JSON.stringify(hist.filter(h=>h.date!==today)));
+      S.dailyXP=0;S.dailyXPDate=today;
+      localStorage.setItem(RESET_FLAG,'1');
+      if(S.id)save(); // persist the corrected total to the server
+    }
   }catch(e){}
 }
 
@@ -1470,7 +1485,7 @@ function openPractice(){
   // Show daily word
   const dw=getDailyWord();
   document.getElementById('dailyWordDisplay').innerHTML=highlightSound(dw.toUpperCase(),S.sound);
-  const intro=`Let's say ${S.sound}!`;
+  const intro=`Let's practice the word ${dw}. Say it slowly... ${dw}.`;
   setPMBubble(intro);speak(intro,()=>{});
   addLogEntry('mumble',intro,null);
 }
@@ -1668,6 +1683,7 @@ async function handleInput(text){
   document.getElementById('pmXPGain').textContent='+'+S.pmSessionXP+' 💎';
   renderPMDots();
   if(!frust)showCorrect();
+  const isLastRound=S.pmRound>=ROUNDS_PER_SESSION;
 
   // Add to word bank if score ≥ 7
   if(score>=7) addToWordBank(text, S.sound);
@@ -1676,7 +1692,14 @@ async function handleInput(text){
   if(S.stage>oldStage){
     const v=VICTORY[Math.floor(Math.random()*VICTORY.length)];
     addLogEntry('mumble',v,score);
-    setPMBubble(v,false,'happy');setCreatureMood('pmCreature','happy');speak(v);showSparkles();
+    setPMBubble(v,false,'happy');setCreatureMood('pmCreature','happy');showSparkles();
+    speak(v,()=>{setCreatureMood('pmCreature','normal');if(isLastRound)showSessionDone();});
+  } else if(isLastRound){
+    // End the session nicely — say a warm goodbye, then show the done screen once Mumble finishes
+    const bye=`Yay! Great job today, ${S.name}! See you next time!`;
+    addLogEntry('mumble',bye,score);
+    setPMBubble(bye,false,'happy');setCreatureMood('pmCreature','happy');showSparkles();
+    speak(bye,()=>{setCreatureMood('pmCreature','normal');showSessionDone();});
   } else {
     addLogEntry('mumble',reply,score);
     setPMBubble(reply,false,mood);setCreatureMood('pmCreature','speaking');
@@ -1684,7 +1707,7 @@ async function handleInput(text){
   }
   // Log attempt to Supabase so parent can see it
   if(S.id) DB.logAttempt(S.id, S.sound, text, score>=6, xpGain);
-  if(S.pmRound>=ROUNDS_PER_SESSION){S.sessions++;checkStreak();setTimeout(showSessionDone,1800);if(!S.activeQuest)setTimeout(triggerQuest,3800);if(S.id)syncFriendAfterPractice();}
+  if(isLastRound){S.sessions++;checkStreak();if(!S.activeQuest)setTimeout(triggerQuest,6000);if(S.id)syncFriendAfterPractice();}
   S.busy=false;
 }
 

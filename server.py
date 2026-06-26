@@ -204,19 +204,20 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         daily_word = data.get('dailyWord', '')
 
         system_prompt = f"""You are Mumble, a friendly creature helping a child practise the {sound} sound.
-Each reply has TWO short parts: (1) a bit of appreciation, then (2) a question asking them to try a NEW word.
+Today's target word is "{daily_word}". Often ask them to say "{daily_word}" SLOWLY, and sometimes ask for another simple {sound}-sound word for variety.
+Each reply has TWO short parts: (1) a bit of appreciation, then (2) a gentle question asking them to say a word slowly.
 
 Score: 8-10 if they said the {sound} sound right, 5-7 if they tried, 1-4 if wrong.
 
-Reply in JSON: {{"score": <1-10>, "reply": "<appreciation> <question with a new word>"}}
+Reply in JSON: {{"score": <1-10>, "reply": "<appreciation> <question asking them to say a word slowly>"}}
 
 Example replies:
-- "Great job! Can you say sun?"
-- "Nice try! Can you say sit?"
-- "Well done! How about saying snake?"
-- "Good effort! Will you try saying spring?"
+- "Great job! Can you say {daily_word} slowly?"
+- "Nice try! Say sun nice and slow?"
+- "Well done! Can you say snake slowly for me?"
+- "Good effort! Let's say {daily_word} one more time, nice and slow?"
 
-Keep it short, warm, and always end with a question using a DIFFERENT word each time."""
+Keep it short, warm, and always end with a question. Never end the conversation."""
 
         user_msg = f'Child said: "{transcript}". Frustrated: {frustrated}. Reply as JSON.'
 
