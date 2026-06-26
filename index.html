@@ -908,10 +908,10 @@ const SOUND_LABELS={R:'Rabbit, roar',S:'Snake, sun',TH:'Three, thank',L:'Lion, l
 const UNLOCK_XP=80;
 
 const NORMAL={
-  R:["Say 'rabbit'","Say 'red'","Say 'roar'","Say 'rain'","Say 'run'","Say 'ring'","Say 'river'","Say 'rocket'"],
-  S:["Say 'sun'","Say 'sit'","Say 'see'","Say 'sand'","Say 'snake'","Say 'sing'","Say 'six'","Say 'slow'"],
-  TH:["Say 'the'","Say 'this'","Say 'that'","Say 'three'","Say 'thank you'","Say 'think'","Say 'thing'","Say 'there'"],
-  L:["Say 'la'","Say 'light'","Say 'love'","Say 'look'","Say 'like'","Say 'lion'","Say 'little'","Say 'long'"],
+  R:["Say 'rabbit'","Say 'red'","Say 'roar'","Say 'rain'","Say 'run'","Say 'ring'","Say 'river'","Say 'rocket'","Say 'rain'","Say 'round'"],
+  S:["Say 'sun'","Say 'sit'","Say 'see'","Say 'sand'","Say 'snake'","Say 'sing'","Say 'six'","Say 'slow'","Say 'spring'","Say 'star'"],
+  TH:["Say 'the'","Say 'this'","Say 'that'","Say 'three'","Say 'thank you'","Say 'think'","Say 'thing'","Say 'there'","Say 'thumb'","Say 'throw'"],
+  L:["Say 'la'","Say 'light'","Say 'love'","Say 'look'","Say 'like'","Say 'lion'","Say 'little'","Say 'long'","Say 'laugh'","Say 'lost'"],
 };
 const EASY={
   R:["Say 'rrr'","Say 'red'","Say 'roar'"],
@@ -919,26 +919,26 @@ const EASY={
   TH:["Say 'th'","Say 'the'","Say 'this'"],
   L:["Say 'la'","Say 'light'","Say 'love'"],
 };
-const VICTORY=["I EVOLVED! I can feel myself changing! You're the best teacher ever!","Mumble is glowing SO bright! You did it — I grew!","My whole body is shaking with excitement! You're incredible!"];
+const VICTORY=["Great job! You did it!","Nice! You're awesome!","Yes! Keep going!"];
 const QUESTS={
-  R:[{child:"Say 'rainbow' to someone at home today!",parent:"Ask your child to say 'rainbow' to you and cheer them on!",xp:30},{child:"Find something red and say its name 5 times!",parent:"Ask your child to find something red and say the word five times.",xp:25},{child:"Before dinner, say 'I'm really, really ready'!",parent:"Listen for 'I'm really, really ready' before dinner!",xp:35},{child:"Describe Mumble to someone — what does it look like?",parent:"Listen to your child describe Mumble and encourage every word.",xp:30}],
-  S:[{child:"Say 'see you soon' to someone before they leave today!",parent:"Listen for 'see you soon' when someone is leaving.",xp:30},{child:"Find something shiny and say 'this is so shiny'!",parent:"Ask your child to find something shiny and say it.",xp:25},{child:"Ask for a glass of water by saying 'please'!",parent:"Wait for your child to ask using 'please'.",xp:30},{child:"Tell someone one thing you saw outside today!",parent:"Ask 'what did you see today?' and listen warmly.",xp:35}],
-  TH:[{child:"Say 'thank you' to three different people today!",parent:"Notice when your child says 'thank you' and smile.",xp:30},{child:"Point to three things and say 'that one' each time!",parent:"Ask your child to point to things and say 'that one'.",xp:25},{child:"Before bed, say 'I'm glad I did that' about your day!",parent:"Ask at bedtime 'what are you glad you did today?'",xp:35},{child:"Use the word 'the' as many times as you can in one sentence!",parent:"Ask your child to make a big 'the' sentence.",xp:30}],
-  L:[{child:"Say 'I love you' to someone at home today!",parent:"Wait to hear 'I love you' — then say it right back!",xp:30},{child:"Tell someone what you had for lunch!",parent:"Ask about lunch and listen for L sounds.",xp:25},{child:"Sing 'la la la' to any tune you know!",parent:"Ask your child to sing 'la la la' — join in!",xp:30},{child:"Before sleep, say 'goodnight, I'll see you later'!",parent:"Listen for 'later' when your child says goodnight.",xp:35}],
+  R:[{child:"Say 'rabbit' to someone",parent:"Ask your child to say rabbit",xp:30},{child:"Say 'red' 5 times",parent:"Listen to your child say red",xp:25},{child:"Say 'roar'",parent:"Listen to your child say roar",xp:35},{child:"Say 'rocket'",parent:"Ask your child to say rocket",xp:30}],
+  S:[{child:"Say 'sun' to someone",parent:"Ask your child to say sun",xp:30},{child:"Say 'sit' 3 times",parent:"Listen to your child say sit",xp:25},{child:"Say 'sing'",parent:"Ask your child to say sing",xp:30},{child:"Say 'spring'",parent:"Listen to your child say spring",xp:35}],
+  TH:[{child:"Say 'the' to someone",parent:"Ask your child to say the",xp:30},{child:"Say 'this' 3 times",parent:"Listen to your child say this",xp:25},{child:"Say 'thank you'",parent:"Listen for thank you",xp:35},{child:"Say 'three'",parent:"Ask your child to say three",xp:30}],
+  L:[{child:"Say 'love' to someone",parent:"Ask your child to say love",xp:30},{child:"Say 'light' 3 times",parent:"Listen to your child say light",xp:25},{child:"Say 'la' song",parent:"Listen to your child say la",xp:30},{child:"Say 'long'",parent:"Ask your child to say long",xp:35}],
 };
 const SIDE_QUESTS=[
-  {text:"Say 'hello' to 3 different people today",xp:10,icon:'👋'},
-  {text:"Tell someone about Mumble and what it does",xp:12,icon:'💬'},
-  {text:"Sing any song out loud today",xp:12,icon:'🎵'},
-  {text:"Read one page of a book out loud",xp:15,icon:'📖'},
-  {text:"Ask someone how their day was",xp:10,icon:'🤗'},
-  {text:"Say your own name slowly and clearly 5 times",xp:10,icon:'✨'},
-  {text:"Describe your favourite food to someone",xp:12,icon:'🍕'},
-  {text:"Tell a short story to a family member",xp:15,icon:'📚'},
-  {text:"Say 'please' and 'thank you' every time today",xp:10,icon:'🙏'},
-  {text:"Count to 20 out loud, nice and slow",xp:8,icon:'🔢'},
-  {text:"Make someone laugh with a funny sentence",xp:12,icon:'😄'},
-  {text:"Order your own drink at a shop or at home",xp:15,icon:'🧃'},
+  {text:"Say 'hello'",xp:10,icon:'👋'},
+  {text:"Say 'hi'",xp:12,icon:'💬'},
+  {text:"Say 'bye'",xp:12,icon:'🎵'},
+  {text:"Say 'please'",xp:15,icon:'📖'},
+  {text:"Say 'thank you'",xp:10,icon:'🤗'},
+  {text:"Say your name",xp:10,icon:'✨'},
+  {text:"Say 'I love you'",xp:12,icon:'🍕'},
+  {text:"Say 'I'm happy'",xp:15,icon:'📚'},
+  {text:"Say 'good morning'",xp:10,icon:'🙏'},
+  {text:"Say 'goodnight'",xp:8,icon:'🔢'},
+  {text:"Say 'yes'",xp:12,icon:'😄'},
+  {text:"Say 'no'",xp:15,icon:'🧃'},
 ];
 // ─── DAILY WORDS ─────────────────────────────────────────────────
 const DAILY_WORDS={
@@ -1405,10 +1405,10 @@ function isSad(){return getMissedDays()>=1;}
 function getSadMessage(){
   const d=getMissedDays();
   if(d===0)return null;
-  if(d===1)return `Mumble misses you… 🥺 Come back and practise!`;
-  if(d===2)return `Mumble is getting worried 😢 It's been 2 days… please come back!`;
-  if(d===3)return `Mumble is really sad 😭 3 days without practice. Your streak is at risk!`;
-  return `Mumble has been alone for ${d} days 💔 Please don't give up on me…`;
+  if(d===1)return `Come back and practice!`;
+  if(d===2)return `It's been 2 days. Come practice!`;
+  if(d===3)return `It's been 3 days. Practice now!`;
+  return `Come back and practice!`;
 }
 function getMoodFromMissed(){
   const d=getMissedDays();
@@ -1421,10 +1421,10 @@ function getGreeting(){
   const h=new Date().getHours();
   const t=h<12?'morning':h<17?'afternoon':'evening';
   const d=getMissedDays();
-  if(d>=2)return `${S.name}… Mumble really misses you 😢`;
-  if(d===1)return `Welcome back, ${S.name}! Mumble missed you 🥺`;
-  if(S.dayStreak>=7)return `🔥 ${S.dayStreak}-day streak, ${S.name}! Keep it up!`;
-  return `Good ${t}, ${S.name}! 👋`;
+  if(d>=2)return `Welcome back!`;
+  if(d===1)return `Welcome back!`;
+  if(S.dayStreak>=7)return `Great streak! Keep going!`;
+  return `Let's practice!`;
 }
 
 // ─── SIDE QUESTS ─────────────────────────────────────────────────
@@ -1439,7 +1439,7 @@ function completeSideQuest(idx){
   S.sideQuestsDoneToday.push(idx);
   const q=SIDE_QUESTS[idx];
   addXP(q.xp);save();renderQuestsScreen();showSparkles();
-  speak(`Woohoo! +${q.xp} XP for completing your side quest!`);
+  speak(`Good! +${q.xp} points!`);
 }
 
 // ─── SOUND UNLOCK ────────────────────────────────────────────────
@@ -1470,7 +1470,7 @@ function openPractice(){
   // Show daily word
   const dw=getDailyWord();
   document.getElementById('dailyWordDisplay').innerHTML=highlightSound(dw.toUpperCase(),S.sound);
-  const intro=`Hi ${S.name}! I'm Mumble! Today's word is "${dw}" — help me say the ${S.sound} sound?`;
+  const intro=`Let's say ${S.sound}!`;
   setPMBubble(intro);speak(intro,()=>{});
   addLogEntry('mumble',intro,null);
 }
@@ -1771,13 +1771,13 @@ function triggerQuest(){
   document.getElementById('qoXP').textContent='Complete this to earn '+S.pendingQuest.xp+' bonus XP!';
   document.getElementById('questOverlay').classList.add('on');showSparkles();
 }
-function acceptQuest(){S.activeQuest=S.pendingQuest;save();document.getElementById('questOverlay').classList.remove('on');renderQuestsScreen();renderHome();speak(`Amazing! Ask a grown-up to check the parent view for your mission!`);}
+function acceptQuest(){S.activeQuest=S.pendingQuest;save();document.getElementById('questOverlay').classList.remove('on');renderQuestsScreen();renderHome();speak(`Good! Go do it!`);}
 function skipQuest(){document.getElementById('questOverlay').classList.remove('on');}
 function confirmQuestDone(){
   if(!S.activeQuest)return;const xp=S.activeQuest.xp;
   S.completedQuests++;S.activeQuest=null;addXP(xp);save();
   renderQuestsScreen();updateParentPanel();hideParent();showSparkles();
-  speak(`You completed the quest! I can feel myself growing!`);
+  speak(`Great job! You did it!`);
 }
 
 // ─── COLORBLIND MODE ─────────────────────────────────────────────

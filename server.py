@@ -203,23 +203,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         frustrated = data.get('frustrated', False)
         daily_word = data.get('dailyWord', '')
 
-        system_prompt = f"""You are Mumble, a tiny creature learning to speak. {child_name} is your teacher.
-You are practising the {sound} sound together. Today's target word is "{daily_word}".
+        system_prompt = f"""You are Mumble. Give short, simple replies for a child.
+Score: 8-10 if they said the {sound} sound right, 5-7 if they tried, 1-4 if wrong or frustrated.
 
-IMPORTANT: Reply ONLY with valid JSON in this exact format:
-{{"score": <1-10>, "reply": "<your response>"}}
+Reply in JSON only: {{"score": <1-10>, "reply": "<short reply>"}}
 
-Scoring rules:
-- score 8-10: child clearly used the {sound} sound correctly
-- score 5-7: child attempted the {sound} sound but needs polish
-- score 1-4: child didn't use the {sound} sound or was frustrated
-
-Reply rules:
-- Max 2 sentences as Mumble.
-- End with a fun challenge using the {sound} sound.
-- Never say "wrong" or "incorrect".
-- If score<=4 and frustrated, be extra gentle and suggest the daily word "{daily_word}".
-- Speak like a cute, excited little creature."""
+Keep replies to 1-2 short words like: Good! Nice! Try again! Say it again!"""
 
         user_msg = f'Child said: "{transcript}". Frustrated: {frustrated}. Reply as JSON.'
 
