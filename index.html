@@ -947,9 +947,23 @@ const DAILY_WORDS={
   TH:['thunder','throne','thought','thick','thousand','thread','thrill','thumb','throw','thud','thin','thaw'],
   L:['lollipop','lighthouse','lemon','lion','ladder','leaf','lamp','lagoon','lullaby','lily','luck','lane'],
 };
+// Short, easy words for warm-up practice (target word comes at the end of the session)
+const PRACTICE_WORDS={
+  R:['red','run','rabbit','ring','rain','roar','rock','road'],
+  S:['sun','sit','see','sand','sing','six','sock','soap'],
+  TH:['the','this','that','three','think','thumb','thin','thing'],
+  L:['la','light','love','look','like','lion','leg','leaf'],
+};
 // seed by day of year so it changes daily
 function getDayIndex(){return Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);}
 function getDailyWord(){return DAILY_WORDS[S.sound][getDayIndex()%DAILY_WORDS[S.sound].length];}
+// The word to ask for this round: easy words early, the target word in the last 3 rounds
+function getRoundWord(){
+  const isTargetPhase=(S.pmRound+1)>(ROUNDS_PER_SESSION-3);
+  if(isTargetPhase)return getDailyWord();
+  const pw=PRACTICE_WORDS[S.sound]||['hi'];
+  return pw[S.pmRound%pw.length];
+}
 function highlightSound(word,sound){
   const pats={R:/r/gi,S:/s/gi,TH:/th/gi,L:/l/gi};
   return word.replace(pats[sound]||/x/,m=>`<span style="color:var(--p);text-decoration:underline;text-underline-offset:3px">${m}</span>`);
@@ -1309,7 +1323,7 @@ async function loadState(){
     // Reset XP boost after use (single session)
     if(S.xpBoost===false)S.xpBoost=false;
     // ONE-TIME: wipe XP gained TODAY only, keep every previous day's XP
-    const RESET_FLAG='mumble_reset_today_v1';
+    const RESET_FLAG='mumble_reset_today_v2';
     if(!localStorage.getItem(RESET_FLAG)){
       const hist=JSON.parse(localStorage.getItem('mumble_xp_history')||'[]');
       const todayEntry=hist.find(h=>h.date===today);
@@ -1485,7 +1499,8 @@ function openPractice(){
   // Show daily word
   const dw=getDailyWord();
   document.getElementById('dailyWordDisplay').innerHTML=highlightSound(dw.toUpperCase(),S.sound);
-  const intro=`Let's practice the word ${dw}. Say it slowly... ${dw}.`;
+  const SIMPLE_START={R:'red',S:'sun',TH:'the',L:'la'};
+  const intro=`Let's warm up! Can you say ${SIMPLE_START[S.sound]||'hi'}?`;
   setPMBubble(intro);speak(intro,()=>{});
   addLogEntry('mumble',intro,null);
 }
@@ -1662,7 +1677,7 @@ async function handleInput(text){
   let reply,mood,score=null;
   try{
     const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({transcript:text,sound:S.sound,name:S.name,frustrated:frust,dailyWord:getDailyWord()})});
+      body:JSON.stringify({transcript:text,sound:S.sound,name:S.name,frustrated:frust,dailyWord:getDailyWord(),nextWord:getRoundWord(),round:S.pmRound+1,totalRounds:ROUNDS_PER_SESSION})});
     const json=await res.json();
     reply=json.reply||getNormal();
     score=json.score||null;
