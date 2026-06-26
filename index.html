@@ -405,7 +405,7 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
         <div class="sound-card" onclick="pickSound('TH',this)"><div class="sc-sound">TH</div><div class="sc-hint">Three, thank</div></div>
         <div class="sound-card" onclick="pickSound('L',this)"><div class="sc-sound">L</div><div class="sc-hint">Lion, lollipop</div></div>
       </div>
-      <button class="btn-main" style="width:100%" onclick="startApp()">Meet Mumble →</button>
+      <button class="btn-main" style="width:100%" onclick="goPetStep()">Next →</button>
       <button class="btn-back" onclick="goBack(3)">← Back</button>
     </div>
     <!-- Step 5: Parent Email -->
@@ -461,6 +461,20 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
         <div id="newpassError" style="display:none;font-size:12px;color:var(--red);font-weight:600;margin-top:2px"></div>
         <button class="btn-main" onclick="setNewPassword()">Continue →</button>
       </div>
+    </div>
+    <!-- Step 9: Pick a pet (new child accounts) -->
+    <div class="ob-step" id="ob9">
+      <div style="width:100%">
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">Choose your pet</h2>
+        <p style="font-size:14px;color:var(--muted)">Will Mumble be a unicorn or a dragon? You can change this later.</p>
+      </div>
+      <svg id="obPetPreview" viewBox="0 0 200 210" style="width:140px;height:147px"></svg>
+      <div style="display:flex;gap:10px;width:100%">
+        <button id="obPetUni" onclick="obPickPet('unicorn')" style="flex:1;padding:14px;border-radius:14px;border:2px solid var(--p);background:var(--pp);cursor:pointer;font-size:15px;font-weight:700">🦄 Unicorn</button>
+        <button id="obPetDra" onclick="obPickPet('dragon')" style="flex:1;padding:14px;border-radius:14px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-size:15px;font-weight:700">🐉 Dragon</button>
+      </div>
+      <button class="btn-main" style="width:100%" onclick="startApp()">Meet Mumble →</button>
+      <button class="btn-back" onclick="goBack(4)">← Back</button>
     </div>
   </div><!-- /ob-steps-area -->
 </div>
@@ -674,6 +688,13 @@ canvas#sparkCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer
     <!-- Settings -->
     <div style="background:var(--card);border-radius:16px;overflow:hidden">
       <div style="padding:14px 16px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border)">SETTINGS</div>
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px">✨ Choose your pet</div>
+        <div style="display:flex;gap:10px">
+          <button id="petUnicornBtn" onclick="setPet('unicorn')" style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-size:14px;font-weight:600">🦄 Unicorn</button>
+          <button id="petDragonBtn" onclick="setPet('dragon')" style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-size:14px;font-weight:600">🐉 Dragon</button>
+        </div>
+      </div>
       <div class="cb-toggle" style="border-bottom:1px solid var(--border);border-radius:0;margin:0">
         <div class="cb-toggle-left">
           <div class="cb-title">🎨 Colorblind-friendly mode</div>
@@ -981,6 +1002,7 @@ const S={
   pmRound:0,pmSessionXP:0,
   sideQuestsDoneToday:[],sideQuestDate:'',
   streakShields:0, dailyXP:0, dailyXPDate:'', leagueRank:9,
+  petType:'unicorn',
 };
 // Friend state (not persisted to Supabase directly, refreshed on load)
 let FRIEND={friendship:null, friend:null, bothToday:false};
@@ -1009,6 +1031,19 @@ const DB={
 let OB_ROLE='child', OB_MODE='signup';
 function showOb(step){document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('show'));document.getElementById('ob'+step).classList.add('show');}
 function goBack(step){showOb(step);}
+function goPetStep(){showOb(9);obPickPet(S.petType||'unicorn');}
+function obPickPet(type){
+  S.petType=type;
+  const u=document.getElementById('obPetUni'),d=document.getElementById('obPetDra');
+  if(u&&d){
+    u.style.border=type==='unicorn'?'2px solid var(--p)':'2px solid var(--border)';
+    u.style.background=type==='unicorn'?'var(--pp)':'var(--card)';
+    d.style.border=type==='dragon'?'2px solid var(--p)':'2px solid var(--border)';
+    d.style.background=type==='dragon'?'var(--pp)':'var(--card)';
+  }
+  const prev=document.getElementById('obPetPreview');
+  if(prev)prev.innerHTML=(type==='dragon')?drawDragon(2,'happy'):drawUnicorn(2,'happy');
+}
 function setOBRole(r){
   OB_ROLE=r;
   const cb=document.getElementById('roleChildBtn');
@@ -1280,7 +1315,10 @@ async function startApp(){
     S.lastPlayed=result.child.last_played;
     S.cbMode=result.child.cb_mode||false;
   }
+  const chosenPet=S.petType;
   await loadState();
+  S.petType=chosenPet; // keep the pet the child just picked during signup
+  save();
   if(S.cbMode)document.body.classList.add('cb');
   document.getElementById('onboard').style.display='none';
   document.getElementById('main').style.display='flex';
@@ -1308,14 +1346,14 @@ function save(){
     soundXP:S.soundXP,ri:S.ri,ei:S.ei,
     sideQuestsDoneToday:S.sideQuestsDoneToday,sideQuestDate:S.sideQuestDate,
     streakShields:S.streakShields,dailyXP:S.dailyXP,dailyXPDate:S.dailyXPDate,
-    xpBoost:S.xpBoost,activeQuest:S.activeQuest,
+    xpBoost:S.xpBoost,activeQuest:S.activeQuest,petType:S.petType,
   }));
 }
 async function loadState(){
   try{
     const local=JSON.parse(localStorage.getItem('mumble_local')||'{}');
     ['soundXP','ri','ei','sideQuestsDoneToday','sideQuestDate',
-     'streakShields','dailyXP','dailyXPDate','xpBoost','activeQuest']
+     'streakShields','dailyXP','dailyXPDate','xpBoost','activeQuest','petType']
     .forEach(k=>{if(local[k]!==undefined)S[k]=local[k];});
     // Reset daily XP if new day
     const today=todayStr();
@@ -1825,6 +1863,24 @@ function toggleCB(){
   document.getElementById('cbToggle').classList.toggle('on',S.cbMode);
   save();renderAll();
 }
+function setPet(type){
+  S.petType=type;
+  save();
+  highlightPetButtons();
+  // Re-draw every creature on screen so the change is instant
+  ['heroCreature','profileCreature','pmCreature','rcSvg','breakCreature'].forEach(id=>{
+    if(document.getElementById(id))renderCreature(id,'happy');
+  });
+  renderAll();
+}
+function highlightPetButtons(){
+  const u=document.getElementById('petUnicornBtn'),d=document.getElementById('petDragonBtn');
+  if(!u||!d)return;
+  const on='2px solid var(--p)',off='2px solid var(--border)';
+  const onbg='var(--pp)',offbg='var(--card)';
+  u.style.border=S.petType==='unicorn'?on:off; u.style.background=S.petType==='unicorn'?onbg:offbg;
+  d.style.border=S.petType==='dragon'?on:off; d.style.background=S.petType==='dragon'?onbg:offbg;
+}
 
 // ─── LEAGUE ──────────────────────────────────────────────────────
 async function renderLeague(){
@@ -2138,6 +2194,7 @@ function renderProfile(){
   document.getElementById('pStat3').textContent=S.sessions;
   document.getElementById('pStat4').textContent=S.completedQuests;
   renderCreature('profileCreature','normal');
+  highlightPetButtons();
   document.getElementById('badge1').classList.toggle('locked',S.xp<1);
   document.getElementById('badge2').classList.toggle('locked',S.stage<1);
   document.getElementById('badge3').classList.toggle('locked',S.dayStreak<3);
@@ -2312,17 +2369,116 @@ function drawMouth(m,cx,cy){
   if(m==='tired')return`<path d="M${cx-10} ${cy+6} Q${cx} ${cy+2} ${cx+10} ${cy+6}" stroke="#1e1b4b" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
   return`<path d="M${cx-13} ${cy} Q${cx} ${cy+13} ${cx+13} ${cy}" stroke="#1e1b4b" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
 }
+// Chibi pets — drawn on a 200x210 canvas. Body colour deepens with stage.
+const UNI_BODY=['#fdf4ff','#fae8ff','#f5d0fe','#f0abfc','#e879f9'];
+const DRA_BODY=['#bbf7d0','#86efac','#4ade80','#22c55e','#16a34a'];
+// Stage 0 = whole egg, stage 1 = egg cracking open with the pet peeking out
+function eggWhole(pet){
+  const isU=pet==='unicorn';
+  const col=isU?'#fdf4ff':'#bbf7d0', spot=isU?'#f5d0fe':'#86efac', eye=isU?'#312e81':'#1f2937';
+  const topper=isU?`<path d="M100 44 L95 62 L105 62 Z" fill="#fbbf24"/>`:`<path d="M100 46 l-6 18 12 0 Z" fill="#16a34a"/>`;
+  return `<path d="M100 60 C72 60 60 106 60 138 C60 170 80 190 100 190 C120 190 140 170 140 138 C140 106 128 60 100 60 Z" fill="${col}"/>`
+    +`<ellipse cx="84" cy="118" rx="7" ry="9" fill="${spot}" opacity=".7"/><ellipse cx="114" cy="140" rx="9" ry="11" fill="${spot}" opacity=".6"/><ellipse cx="94" cy="160" rx="6" ry="7" fill="${spot}" opacity=".7"/>`
+    +topper
+    +`<path d="M84 128 Q90 134 96 128 M104 128 Q110 134 116 128" stroke="${eye}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+    +`<path d="M94 140 Q100 145 106 140" stroke="${eye}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+    +`<ellipse cx="78" cy="134" rx="6" ry="4" fill="#fda4af" opacity=".6"/><ellipse cx="122" cy="134" rx="6" ry="4" fill="#fda4af" opacity=".6"/>`;
+}
+function eggHatching(pet,m){
+  const isU=pet==='unicorn';
+  const shell=isU?'#fae8ff':'#86efac', spot=isU?'#f5d0fe':'#4ade80';
+  const bottom=`<path d="M62 140 Q62 192 100 192 Q138 192 138 140 L130 152 L121 138 L112 152 L103 138 L94 152 L85 138 L76 152 L68 140 Z" fill="${shell}"/><ellipse cx="86" cy="168" rx="7" ry="9" fill="${spot}" opacity=".6"/><ellipse cx="114" cy="172" rx="6" ry="8" fill="${spot}" opacity=".6"/>`;
+  const cap=`<path d="M120 78 L126 70 L132 80 L140 72 L146 84 Q134 88 122 86 Z" fill="${shell}" transform="rotate(8 132 80)"/>`;
+  let head;
+  if(isU){
+    head=`<circle cx="100" cy="116" r="33" fill="#faf5ff"/>`
+      +`<path d="M76 102 L82 86 L92 104 Z" fill="#faf5ff"/><path d="M124 102 L118 86 L108 104 Z" fill="#faf5ff"/>`
+      +`<path d="M100 72 L94 98 L106 98 Z" fill="#fbbf24"/><path d="M96 94 L104 91 M97 87 L103 85" stroke="#f59e0b" stroke-width="1.6" fill="none" stroke-linecap="round"/>`
+      +`<path d="M90 92 Q88 82 98 84 Q94 92 102 90 Z" fill="#fb7185"/>`
+      +`<ellipse cx="90" cy="116" rx="5.5" ry="8" fill="#312e81"/><ellipse cx="110" cy="116" rx="5.5" ry="8" fill="#312e81"/><circle cx="92" cy="113" r="2" fill="#fff"/><circle cx="112" cy="113" r="2" fill="#fff"/>`
+      +`<ellipse cx="80" cy="126" rx="6" ry="4" fill="#fda4af" opacity=".7"/><ellipse cx="120" cy="126" rx="6" ry="4" fill="#fda4af" opacity=".7"/>`
+      +`<path d="M94 130 Q100 135 106 130" stroke="#312e81" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  } else {
+    head=`<path d="M84 90 Q76 74 86 70 Q86 82 92 92 Z" fill="#fde68a"/><path d="M116 90 Q124 74 114 70 Q114 82 108 92 Z" fill="#fde68a"/>`
+      +`<circle cx="100" cy="116" r="33" fill="#86efac"/>`
+      +`<ellipse cx="100" cy="126" rx="19" ry="13" fill="#bbf7d0"/><circle cx="93" cy="124" r="1.8" fill="#1f2937"/><circle cx="107" cy="124" r="1.8" fill="#1f2937"/>`
+      +`<circle cx="90" cy="110" r="7" fill="#fff"/><circle cx="110" cy="110" r="7" fill="#fff"/><circle cx="91" cy="111" r="4" fill="#1f2937"/><circle cx="109" cy="111" r="4" fill="#1f2937"/><circle cx="92" cy="108" r="1.5" fill="#fff"/><circle cx="110" cy="108" r="1.5" fill="#fff"/>`
+      +`<path d="M92 132 Q100 138 108 132" stroke="#1f2937" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  }
+  return `${cap}${head}${bottom}`;
+}
+function _eyesU(m){
+  if(m==='happy')return `<path d="M77 98 Q84 90 91 98" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M109 98 Q116 90 123 98" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if(m==='tired')return `<path d="M77 99 Q84 103 91 99" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M109 99 Q116 103 123 99" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  return `<ellipse cx="84" cy="98" rx="7.5" ry="10.5" fill="#312e81"/><ellipse cx="116" cy="98" rx="7.5" ry="10.5" fill="#312e81"/><circle cx="86" cy="94" r="2.6" fill="#fff"/><circle cx="118" cy="94" r="2.6" fill="#fff"/><path d="M73 88 Q78 84 84 86 M127 88 Q122 84 116 86" stroke="#312e81" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+}
+function _mouthU(m){
+  if(m==='happy')return `<path d="M90 115 Q100 125 110 115" stroke="#312e81" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  return `<path d="M92 116 Q100 122 108 116" stroke="#312e81" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+}
+function drawUnicorn(stage,m){
+  if(stage===0)return eggWhole('unicorn');
+  if(stage===1)return eggHatching('unicorn',m);
+  const body=UNI_BODY[stage]||UNI_BODY[0], head=lighten(body);
+  const wings=stage>=3?`<g opacity=".95"><path d="M58 138 Q24 120 16 150 Q34 150 40 160 Q24 162 34 174 Q58 158 70 150 Z" fill="#ffffff" stroke="#e9d5ff" stroke-width="2"/><path d="M142 138 Q176 120 184 150 Q166 150 160 160 Q176 162 166 174 Q142 158 130 150 Z" fill="#ffffff" stroke="#e9d5ff" stroke-width="2"/></g>`:'';
+  const sparkle=stage>=4?`<g fill="#fbbf24"><path d="M30 56 l2.4 6 6 2.4 -6 2.4 -2.4 6 -2.4 -6 -6 -2.4 6 -2.4 Z"/><path d="M170 60 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/></g>`:'';
+  const maneExtra=stage>=2?`<path d="M120 104 Q144 120 132 152 Q126 140 120 148 Q126 120 112 118 Z" fill="#5eead4"/>`:'';
+  const tail=`<path d="M138 138 Q176 144 170 196 Q160 180 150 188 Q160 160 134 158 Z" fill="#fb7185"/><path d="M140 150 Q172 158 166 198 Q158 184 150 190 Q158 166 136 166 Z" fill="#c084fc"/>${stage>=2?`<path d="M142 162 Q168 172 160 200 Q154 190 148 194 Q154 176 138 176 Z" fill="#5eead4"/>`:''}`;
+  return `${sparkle}${wings}${tail}`
+    +`<ellipse cx="82" cy="184" rx="13" ry="16" fill="${body}"/><ellipse cx="118" cy="184" rx="13" ry="16" fill="${body}"/>`
+    +`<ellipse cx="82" cy="193" rx="12" ry="6" fill="#d8b4fe"/><ellipse cx="118" cy="193" rx="12" ry="6" fill="#d8b4fe"/>`
+    +`<ellipse cx="100" cy="150" rx="50" ry="36" fill="${body}"/>`
+    +`<circle cx="100" cy="96" r="44" fill="${head}"/>`
+    +`<path d="M66 70 L74 50 L84 72 Z" fill="${body}"/><path d="M134 70 L126 50 L116 72 Z" fill="${body}"/>`
+    +`<path d="M70 68 L75 56 L80 70 Z" fill="#fbcfe8"/><path d="M130 68 L125 56 L120 70 Z" fill="#fbcfe8"/>`
+    +`<path d="M122 58 Q152 70 146 112 Q136 100 130 114 Q134 84 118 82 Z" fill="#fb7185"/>`
+    +`<path d="M124 80 Q152 96 142 134 Q132 120 126 132 Q132 102 118 100 Z" fill="#c084fc"/>${maneExtra}`
+    +`<path d="M100 ${18-stage*2} L91 60 L109 60 Z" fill="#fbbf24"/>`
+    +`<path d="M94 56 L106 51 M95 47 L105 43 M96 38 L104 35 M97 29 L103 27" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round"/>`
+    +`<path d="M80 62 Q76 48 90 50 Q86 60 96 56 Q90 70 82 70 Z" fill="#c084fc"/><path d="M100 60 Q96 48 108 50 Q104 60 114 58 Q108 70 100 70 Z" fill="#fb7185"/>`
+    +`<ellipse cx="72" cy="110" rx="8" ry="5" fill="#fda4af" opacity=".75"/><ellipse cx="128" cy="110" rx="8" ry="5" fill="#fda4af" opacity=".75"/>`
+    +_eyesU(m)+_mouthU(m);
+}
+function _eyesD(m){
+  if(m==='happy')return `<path d="M79 88 Q86 80 93 88" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M107 88 Q114 80 121 88" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if(m==='tired')return `<path d="M79 89 Q86 93 93 89" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M107 89 Q114 93 121 89" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  return `<circle cx="86" cy="86" r="10" fill="#fff"/><circle cx="114" cy="86" r="10" fill="#fff"/><circle cx="88" cy="88" r="5.5" fill="#1f2937"/><circle cx="112" cy="88" r="5.5" fill="#1f2937"/><circle cx="90" cy="85" r="2" fill="#fff"/><circle cx="114" cy="85" r="2" fill="#fff"/>`;
+}
+function drawDragon(stage,m){
+  if(stage===0)return eggWhole('dragon');
+  if(stage===1)return eggHatching('dragon',m);
+  const body=DRA_BODY[stage]||DRA_BODY[0];
+  let wings='';
+  if(stage>=1){
+    const w=`<g opacity=".96"><path d="M70 98 Q32 72 20 108 Q36 106 38 120 Q24 120 32 134 Q56 116 76 114 Z" fill="#34d399" stroke="#15803d" stroke-width="2"/><path d="M130 98 Q168 72 180 108 Q164 106 162 120 Q176 120 168 134 Q144 116 124 114 Z" fill="#34d399" stroke="#15803d" stroke-width="2"/></g>`;
+    wings=stage>=3?w:`<g transform="translate(100 110) scale(0.72) translate(-100 -110)">${w}</g>`;
+  }
+  const tail=`<path d="M140 150 Q180 156 184 198 Q174 190 170 198 L160 188 Q150 164 132 164 Z" fill="${body}"/>${stage>=2?`<path d="M174 190 l12 6 -11 6 Z" fill="#22c55e"/><path d="M150 168 l5 -9 5 9 Z" fill="#16a34a"/>`:''}`;
+  let crest='';const nsp=1+stage;
+  for(let i=0;i<nsp;i++){const x=100+(i-(nsp-1)/2)*14;crest+=`<path d="M${x-6} 58 l6 -12 l6 12 Z" fill="#16a34a"/>`;}
+  const flame=stage>=4?`<path d="M126 106 Q140 102 137 116 Q147 111 142 123 Q133 126 126 119 Z" fill="#fb923c"/><path d="M129 111 Q138 109 136 117 Q141 114 138 121 Q132 122 129 117 Z" fill="#fde047"/>`:'';
+  return `${wings}${tail}${flame}`
+    +`<ellipse cx="82" cy="184" rx="15" ry="11" fill="${body}"/><ellipse cx="118" cy="184" rx="15" ry="11" fill="${body}"/>`
+    +`<path d="M72 190 l4 -6 4 6 Z M82 191 l4 -6 4 6 Z" fill="#fef9c3"/><path d="M110 190 l4 -6 4 6 Z M120 191 l4 -6 4 6 Z" fill="#fef9c3"/>`
+    +`<ellipse cx="100" cy="150" rx="48" ry="37" fill="${body}"/>`
+    +`<ellipse cx="100" cy="158" rx="29" ry="27" fill="#fef9c3"/>`
+    +`<path d="M82 150 H118 M79 160 H121 M83 170 H117" stroke="#fde68a" stroke-width="1.6" fill="none"/>`
+    +crest
+    +`<circle cx="100" cy="92" r="42" fill="${body}"/>`
+    +`<path d="M76 62 Q66 42 80 38 Q80 54 88 64 Z" fill="#fde68a"/><path d="M124 62 Q134 42 120 38 Q120 54 112 64 Z" fill="#fde68a"/>`
+    +`<ellipse cx="100" cy="104" rx="25" ry="18" fill="#86efac"/>`
+    +`<circle cx="91" cy="102" r="2" fill="#1f2937"/><circle cx="109" cy="102" r="2" fill="#1f2937"/>`
+    +`<path d="M90 110 Q100 118 110 110" stroke="#1f2937" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+    +`${m!=='tired'?`<path d="M96 112 l3 7 3 -7 Z" fill="#fff"/>`:''}`
+    +`<ellipse cx="74" cy="100" rx="7" ry="4.5" fill="#fca5a5" opacity=".7"/><ellipse cx="126" cy="100" rx="7" ry="4.5" fill="#fca5a5" opacity=".7"/>`
+    +_eyesD(m);
+}
 function renderCreature(id,mood){
   const el=document.getElementById(id);if(!el)return;
-  const col=STAGES[S.stage].c,lig=lighten(col),m=mood==='speaking'?'normal':mood;
-  const s=[
-    `<ellipse cx="85" cy="105" rx="54" ry="64" fill="${col}"/><ellipse cx="85" cy="105" rx="46" ry="56" fill="${lig}" opacity=".22"/>${drawEyes(m,69,97,101,97)}${drawMouth(m,85,114)}`,
-    `<ellipse cx="85" cy="105" rx="54" ry="64" fill="${col}"/><ellipse cx="85" cy="105" rx="46" ry="56" fill="${lig}" opacity=".22"/><path d="M66 63 L74 77 L60 87 L78 93" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="85" cy="56" rx="16" ry="11" fill="${lig}" opacity=".8"/>${drawEyes(m,69,93,101,93)}${drawMouth(m,85,111)}`,
-    `<ellipse cx="85" cy="144" rx="46" ry="27" fill="${col}" opacity=".5"/><ellipse cx="85" cy="110" rx="42" ry="50" fill="${col}"/><ellipse cx="53" cy="119" rx="16" ry="9" fill="${col}" transform="rotate(-22 53 119)"/><ellipse cx="117" cy="119" rx="16" ry="9" fill="${col}" transform="rotate(22 117 119)"/>${drawEyes(m,70,89,100,89)}${drawMouth(m,85,108)}`,
-    `<ellipse cx="85" cy="113" rx="44" ry="54" fill="${col}"/><ellipse cx="47" cy="118" rx="20" ry="11" fill="${col}" transform="rotate(-26 47 118)"/><ellipse cx="123" cy="118" rx="20" ry="11" fill="${col}" transform="rotate(26 123 118)"/><ellipse cx="85" cy="155" rx="22" ry="13" fill="${lig}" opacity=".6"/>${drawEyes(m,68,83,102,83)}${drawMouth(m,85,104)}`,
-    `<ellipse cx="85" cy="110" rx="48" ry="58" fill="${col}"/><ellipse cx="44" cy="116" rx="24" ry="13" fill="${col}" transform="rotate(-28 44 116)"/><ellipse cx="126" cy="116" rx="24" ry="13" fill="${col}" transform="rotate(28 126 116)"/><ellipse cx="85" cy="158" rx="26" ry="16" fill="${lig}" opacity=".65"/>${drawEyes(m,66,77,104,77)}${drawMouth(m,85,100)}`,
-  ];
-  el.innerHTML=s[S.stage]||s[0];
+  const m=mood==='speaking'?'normal':mood;
+  const inner=(S.petType==='dragon')?drawDragon(S.stage,m):drawUnicorn(S.stage,m);
+  const sc=[0.82,0.9,1.0,1.1,1.18][S.stage]||1;
+  el.innerHTML=`<svg viewBox="0 0 200 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><g transform="translate(100 118) scale(${sc}) translate(-100 -118)">${inner}</g></svg>`;
 }
 
 renderCreature('heroCreature','normal');
