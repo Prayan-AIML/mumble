@@ -23,6 +23,10 @@ load_dotenv('.env.local')
 
 SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip().rstrip('/')
 SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
+# Service key bypasses Row Level Security — server-side only (never sent to the browser).
+# When set, it's used for ALL Supabase calls so XP/streak updates always persist.
+SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
+SUPABASE_DB_KEY = SUPABASE_SERVICE_KEY or SUPABASE_KEY
 OPENAI_KEY = os.getenv('OPENAI_API_KEY', '').strip()
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
 RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
@@ -134,8 +138,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             url += '?' + urllib.parse.urlencode(filters)
 
         req = urllib.request.Request(url, method=method)
-        req.add_header('Authorization', f'Bearer {SUPABASE_KEY}')
-        req.add_header('apikey', SUPABASE_KEY)
+        req.add_header('Authorization', f'Bearer {SUPABASE_DB_KEY}')
+        req.add_header('apikey', SUPABASE_DB_KEY)
         req.add_header('Content-Type', 'application/json')
         req.add_header('Prefer', 'return=representation')
 
@@ -640,6 +644,7 @@ def start():
     print(f"🚀 Mumble server running at http://localhost:{PORT}/")
     print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
     print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
+    print("✓ Using SERVICE key for DB writes (bypasses RLS)" if SUPABASE_SERVICE_KEY else "⚠️  Using ANON key — XP writes need RLS disabled on tables")
     print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
     if MAILJET_KEY:
         print(f"✓ Email OTP via Mailjet (sender: {SENDER_EMAIL})")
