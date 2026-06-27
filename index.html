@@ -1364,21 +1364,6 @@ async function loadState(){
     if(S.dailyXPDate!==today){S.dailyXP=0;S.dailyXPDate=today;}
     // Reset XP boost after use (single session)
     if(S.xpBoost===false)S.xpBoost=false;
-    // ONE-TIME: wipe XP gained TODAY only, keep every previous day's XP
-    const RESET_FLAG='mumble_reset_today_v3';
-    if(!localStorage.getItem(RESET_FLAG)){
-      const hist=JSON.parse(localStorage.getItem('mumble_xp_history')||'[]');
-      const todayEntry=hist.find(h=>h.date===today);
-      const todayXP=todayEntry?(todayEntry.xp||0):0;
-      if(todayXP>0){
-        S.xp=Math.max(0,(S.xp||0)-todayXP);
-        S.stage=STAGES.reduce((a,st,i)=>S.xp>=st.minXP?i:a,0);
-      }
-      localStorage.setItem('mumble_xp_history',JSON.stringify(hist.filter(h=>h.date!==today)));
-      S.dailyXP=0;S.dailyXPDate=today;
-      localStorage.setItem(RESET_FLAG,'1');
-      if(S.id)save(); // persist the corrected total to the server
-    }
   }catch(e){}
 }
 
