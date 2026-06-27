@@ -32,10 +32,10 @@ _mic = MicAPI()
 window = webview.create_window(
     'Mumble',
     MUMBLE_URL,
-    width=1100,
-    height=720,
+    width=1000,
+    height=660,
     resizable=True,
-    min_size=(900, 600),
+    min_size=(760, 480),
     js_api=_mic,
 )
 webview.start(private_mode=False, storage_path=STORAGE)
