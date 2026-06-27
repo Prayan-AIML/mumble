@@ -18,8 +18,9 @@ except ImportError:
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE
 
-# Load .env.local
+# Load .env.local (original) and .env (AI Word Coach feature key)
 load_dotenv('.env.local')
+load_dotenv('.env')
 
 SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip().rstrip('/')
 SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
@@ -28,7 +29,10 @@ SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
 SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
 SUPABASE_DB_KEY = SUPABASE_SERVICE_KEY or SUPABASE_KEY
 OPENAI_KEY = os.getenv('OPENAI_API_KEY', '').strip()
-OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
+# Existing chat/transcribe/TTS still use a Chat-Completions model (gpt-4o-mini default).
+OPENAI_MODEL = os.getenv('OPENAI_CHAT_MODEL', 'gpt-4o-mini').strip()
+# Dedicated model for the AI Word Coach feature (OpenAI Responses API).
+COACH_MODEL = os.getenv('OPENAI_MODEL', 'gpt-5.4-nano').strip() or 'gpt-5.4-nano'
 RESEND_KEY = os.getenv('RESEND_KEY', '').strip()
 MAILJET_KEY = os.getenv('MAILJET_KEY', '').strip()
 MAILJET_SECRET = os.getenv('MAILJET_SECRET', '').strip()
@@ -95,6 +99,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 return self.supabase_upsert_quest(data)
             elif path == '/api/chat':
                 return self.openai_chat(data)
+            elif path == '/api/word-coach':
+                return self.word_coach(data)
             elif path == '/api/parent/register':
                 return self.parent_register(data)
             elif path == '/api/parent/link-child':
@@ -265,6 +271,102 @@ Keep it short and warm. Always ask for "{next_word}". Never end the conversation
             return {'error': err, 'reply': "I heard you! Try saying the daily word one more time?", 'score': 5}
         except Exception as e:
             return {'error': str(e), 'reply': "I heard you! Can you try that sound one more time for me?", 'score': 5}
+
+    def word_coach(self, data):
+        """AI Word Coach — given a target speech sound and the child's level,
+        gpt-5.4-nano builds a tiny, age-appropriate practice set: a few warm-up
+        words, the target word(s), and one cheerful coaching sentence.
+        Uses the OpenAI Responses API."""
+        sound = str(data.get('sound', 'R')).strip().upper() or 'R'
+        level = str(data.get('level', 'Hatchling')).strip() or 'Hatchling'
+        name = str(data.get('name', 'friend')).strip() or 'friend'
+
+        if not OPENAI_KEY:
+            return {'error': 'OPENAI_API_KEY is not set on the server.'}
+
+        system = (
+            "You are Mumble's Word Coach, a warm speech-practice helper for young "
+            "children (ages 4-8) with speech delays. You design tiny practice sets "
+            "for ONE target speech sound. Use only simple, common, concrete words a "
+            "small child knows. Keep everything cheerful and easy. "
+            "Reply with ONLY valid JSON, no extra text."
+        )
+        user = (
+            f"Child name: {name}. Target sound: '{sound}'. "
+            f"Pet level (easier->harder): {level}. "
+            "Build a practice set. Return JSON shaped exactly like: "
+            '{"warmups": ["w1","w2","w3"], "target": "word", '
+            '"praise": "one short cheerful sentence to the child"}. '
+            f"Rules: 3 warm-up words that all start with or strongly feature the '{sound}' "
+            f"sound and are very easy; 1 slightly harder target word that also features '{sound}'; "
+            "the praise sentence must address the child warmly by name, be 1 sentence, "
+            "kid-friendly, and gently remind them to say the sound slowly. "
+            "Lowercase all words."
+        )
+
+        body = {
+            'model': COACH_MODEL,
+            'input': [
+                {'role': 'system', 'content': system},
+                {'role': 'user', 'content': user},
+            ],
+            'reasoning': {'effort': 'low'},
+            'text': {'verbosity': 'low'},
+            'max_output_tokens': 600,
+        }
+
+        req = urllib.request.Request('https://api.openai.com/v1/responses', method='POST')
+        req.add_header('Authorization', f'Bearer {OPENAI_KEY}')
+        req.add_header('Content-Type', 'application/json')
+        req.data = json.dumps(body).encode('utf-8')
+
+        try:
+            with urllib.request.urlopen(req, timeout=30, context=ssl_ctx) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            return {'error': e.read().decode('utf-8')}
+        except Exception as e:
+            return {'error': str(e)}
+
+        # Pull text out of the Responses API shape (output_text or output[].content[].text)
+        text = (result.get('output_text') or '').strip()
+        if not text:
+            chunks = []
+            for item in result.get('output', []) or []:
+                for c in item.get('content', []) or []:
+                    if c.get('type') in ('output_text', 'text') and c.get('text'):
+                        chunks.append(c['text'])
+            text = ''.join(chunks).strip()
+
+        if not text:
+            return {'error': 'Empty response from model', 'raw': result}
+
+        # The model may wrap JSON in ```json fences — strip them.
+        clean = text.strip()
+        if clean.startswith('```'):
+            clean = clean.split('```', 2)[1] if clean.count('```') >= 2 else clean.strip('`')
+            if clean.lstrip().lower().startswith('json'):
+                clean = clean.lstrip()[4:]
+        clean = clean.strip()
+
+        try:
+            parsed = json.loads(clean)
+            warmups = [str(w).strip() for w in (parsed.get('warmups') or []) if str(w).strip()][:3]
+            target = str(parsed.get('target', '')).strip()
+            praise = str(parsed.get('praise', '')).strip()
+            if warmups and target:
+                return {
+                    'sound': sound,
+                    'level': level,
+                    'warmups': warmups,
+                    'target': target,
+                    'praise': praise or f"Great work, {name}! Say it nice and slow.",
+                    'model': COACH_MODEL,
+                }
+        except Exception:
+            pass
+        # Couldn't parse — hand back the raw text so the UI can still show something.
+        return {'sound': sound, 'level': level, 'raw_text': text, 'model': COACH_MODEL}
 
     def supabase_upsert_quest(self, data):
         """Create or update a quest"""
@@ -656,7 +758,7 @@ def start():
     print(f"✓ Supabase URL: {SUPABASE_URL}" if SUPABASE_URL else "❌ SUPABASE_URL is NOT SET")
     print(f"✓ Supabase key: {SUPABASE_KEY[:8]}..." if SUPABASE_KEY else "❌ SUPABASE_ANON_KEY is NOT SET")
     print("✓ Using SERVICE key for DB writes (bypasses RLS)" if SUPABASE_SERVICE_KEY else "⚠️  Using ANON key — XP writes need RLS disabled on tables")
-    print(f"✓ OpenAI configured — model: {OPENAI_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
+    print(f"✓ OpenAI configured — chat: {OPENAI_MODEL}, word-coach: {COACH_MODEL}" if OPENAI_KEY else "❌ OPENAI_API_KEY is NOT SET")
     if MAILJET_KEY:
         print(f"✓ Email OTP via Mailjet (sender: {SENDER_EMAIL})")
     elif BREVO_KEY:
