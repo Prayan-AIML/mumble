@@ -1365,7 +1365,7 @@ async function loadState(){
     // Reset XP boost after use (single session)
     if(S.xpBoost===false)S.xpBoost=false;
     // ONE-TIME: wipe XP gained TODAY only, keep every previous day's XP
-    const RESET_FLAG='mumble_reset_today_v2';
+    const RESET_FLAG='mumble_reset_today_v3';
     if(!localStorage.getItem(RESET_FLAG)){
       const hist=JSON.parse(localStorage.getItem('mumble_xp_history')||'[]');
       const todayEntry=hist.find(h=>h.date===today);
