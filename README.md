@@ -20,6 +20,6 @@ Available for macOS (.dmg), Windows (.exe), and Linux.
 
 ## Latest Build
 
-[v1.0.16 — Pet choice (unicorn/dragon) with 5-stage egg-to-creature artwork](https://github.com/Prayan-AIML/mumble/actions/runs/28229879781)
+[v1.0.19 — Scrolling fix, reliable speech (TTS fallback), pet choice](https://github.com/Prayan-AIML/mumble/actions/runs/28278699723)
 
 See all builds on the [Actions page](https://github.com/Prayan-AIML/mumble/actions).
