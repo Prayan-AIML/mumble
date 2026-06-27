@@ -20,6 +20,6 @@ Available for macOS (.dmg), Windows (.exe), and Linux.
 
 ## Latest Build
 
-[v1.0.19 — Scrolling fix, reliable speech (TTS fallback), pet choice](https://github.com/Prayan-AIML/mumble/actions/runs/28278699723)
+[v1.0.21 — Reliable XP saving, scrolling fix, fitted window, pet choice](https://github.com/Prayan-AIML/mumble/actions/runs/28279235677)
 
 See all builds on the [Actions page](https://github.com/Prayan-AIML/mumble/actions).
