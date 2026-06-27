@@ -181,11 +181,22 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         return {'error': 'Failed to create child'}
 
     def supabase_update_child(self, data):
-        """Update child data"""
+        """Update child data. If a column is missing, strip it and retry so the
+        rest (XP, streak, etc.) still saves instead of the whole update failing."""
         child_id = data.get('id')
         updates = {k: v for k, v in data.items() if k != 'id'}
 
         result = self.supabase_call('PATCH', 'children', updates, filters={'id': f'eq.{child_id}'})
+        tries = 0
+        while isinstance(result, dict) and result.get('error') and updates and tries < 6:
+            err = str(result['error'])
+            bad = next((c for c in list(updates.keys()) if c in err), None)
+            if not bad:
+                break
+            print(f"[child/update] dropping unknown column '{bad}' and retrying")
+            updates.pop(bad, None)
+            result = self.supabase_call('PATCH', 'children', updates, filters={'id': f'eq.{child_id}'})
+            tries += 1
         return {'success': True, 'data': result}
 
     def supabase_log_attempt(self, data):
